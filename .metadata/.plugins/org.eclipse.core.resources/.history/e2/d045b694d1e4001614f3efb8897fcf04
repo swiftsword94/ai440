@@ -1,0 +1,24 @@
+import javafx.application.Application;
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+public class Grid extends Application {
+    @Override
+    public void start(final Stage stage) {
+        // create a grid with some sample data.
+        GridPane grid = new GridPane();
+        
+   
+        grid.addRow(0, new Label("hard"), new Label("unblocked"), new Label("highway"));
+        grid.addRow(1, new Label("easy"), new Label("highway"), new Label("block"));
+        
+    }
+
+    public static void main(String[] args) {
+        launch();
+    }
+}
