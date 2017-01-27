@@ -1,0 +1,31 @@
+import javafx.application.Application;
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+public class Grid extends Application {
+    @Override
+    public void start(final Stage stage) {
+        // create a grid with some sample data.
+        GridPane gridpane = new GridPane();
+     // Set one constraint at a time...
+        Button button = new Button();
+        GridPane.setRowIndex(button, 1);
+        GridPane.setColumnIndex(button, 2);
+
+        // or convenience methods set more than one constraint at once...
+        Label label = new Label();
+        GridPane.setConstraints(label, 3, 1); // column=3 row=1
+
+        // don't forget to add children to gridpane
+        gridpane.getChildren().addAll(button, label);
+
+    }
+
+    public static void main(String[] args) {
+        launch();
+    }
+}

@@ -1,0 +1,47 @@
+import javafx.application.Application;
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+public class Grid extends Application {
+	@Override
+    public void start(Stage primaryStage) throws Exception {
+        primaryStage.setTitle("Grid");
+        
+        
+
+        Button button1 = new Button("0");
+        Button button2 = new Button("1");
+        Button button3 = new Button("2");
+        Button button4 = new Button("a");
+        Button button5 = new Button("a");
+        Button button6 = new Button("1");
+
+        GridPane gridPane = new GridPane();
+
+        for (int i=0; i<120; i++){
+        	for (int j=0; j<160;j++){
+        		Button button = new Button("0");
+        		gridPane.add(button, i, j);
+        	}
+        }
+        
+        gridPane.add(button1, 0, 0, 1, 1);
+        gridPane.add(button2, 1, 0, 1, 1);
+        gridPane.add(button3, 2, 0, 1, 1);
+        gridPane.add(button4, 0, 1, 1, 1);
+        gridPane.add(button5, 1, 1, 1, 1);
+        gridPane.add(button6, 2, 1, 1, 1);
+
+        Scene scene = new Scene(gridPane, 240, 100);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    public static void main(String[] args) {
+        Application.launch(args);
+    }
+}

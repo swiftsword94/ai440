@@ -1,33 +1,46 @@
 import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.RowConstraints;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import java.util.Random;
 
 public class Grid extends Application {
+	@Override
+    public void start(Stage primaryStage) throws Exception {
+        primaryStage.setTitle("Grid");
+      
+        GridPane gridPane = new GridPane();
 
-    @Override
-    public void start(Stage primaryStage) {
-        GridPane root = new GridPane();
-        root.setGridLinesVisible(true);
-        final int numCols = 160 ;
-        final int numRows = 120 ;
-        for (int i = 0; i < numCols; i++) {
-            ColumnConstraints colConst = new ColumnConstraints();
-            colConst.setPercentWidth(100.0);
-            root.getColumnConstraints().add(colConst);
+        
+        //creates grid
+        //0 indicates blocked cell
+        //1 indicates regular unblocked cell
+        //2 indicates hard to traverse cell
+        //a indicates regular unblocked cell with highway
+        //b indicates hard to traverse cell with a highway
+        
+        //randomize function for unique cell
+        String[] cellTypes = {"0","1", "2", "a", "b"};
+        Random rand = new Random();
+        
+        
+        for (int i=0; i<120; i++){
+        	for (int j=0; j<160;j++){
+        		int  random = rand.nextInt(5);
+        		//50 is the maximum and the 1 is our minimum
+        		Button button = new Button(cellTypes[random]);
+        		gridPane.add(button, i, j, 1, 1);
+        	}
         }
-        for (int i = 0; i < numRows; i++) {
-            RowConstraints rowConst = new RowConstraints();
-            rowConst.setPercentHeight(100.0);
-            root.getRowConstraints().add(rowConst);         
-        }
-        primaryStage.setScene(new Scene(root, 800, 600));
+        
+
+        Scene scene = new Scene(gridPane, 600, 800);
+        primaryStage.setScene(scene);
         primaryStage.show();
     }
 
     public static void main(String[] args) {
-        launch(args);
+        Application.launch(args);
     }
 }
