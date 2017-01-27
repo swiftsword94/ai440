@@ -15,12 +15,12 @@ public class Grid extends Application {
         final int numRows = 120 ;
         for (int i = 0; i < numCols; i++) {
             ColumnConstraints colConst = new ColumnConstraints();
-            colConst.setPercentWidth(100.0);
+            colConst.setPercentWidth(100.0 / numCols);
             root.getColumnConstraints().add(colConst);
         }
         for (int i = 0; i < numRows; i++) {
             RowConstraints rowConst = new RowConstraints();
-            rowConst.setPercentHeight(100.0);
+            rowConst.setPercentHeight(100.0 / numRows);
             root.getRowConstraints().add(rowConst);         
         }
         primaryStage.setScene(new Scene(root, 800, 600));
