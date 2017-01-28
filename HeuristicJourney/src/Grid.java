@@ -4,10 +4,40 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.util.Random;
+import java.util.ArrayList
+import java.util.PriorityQueue
 
 public class Grid extends Application {
-	@Override
-    public void start(Stage primaryStage) throws Exception {
+	public static class search
+	{
+		public search()
+		{
+			
+		}
+		//will use euclidian distance
+		private float getHeuristic(Node start, Node end)
+		{
+			return (start.y-end.y)/(start.x-end.x);
+		}
+		/*
+			This Method uses A* to traverse the grid from the start to end. 
+			@param grid An arraylist of Cells that will be traversed.
+			@param start The start of the traversal.
+			@param end The end Cell needed to traverse to.
+			@see Cell
+		*/
+		public static ArrayList<Node> astar(ArrayList<ArrayList<Node>> grid, Node start, Node end)
+		{
+			Node ptr = start;
+			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors in the middle of a block
+			while(true)
+			{
+				//fill
+			}
+		}
+	}
+		@Override
+	    public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("Grid");
       
         GridPane gridPane = new GridPane();
