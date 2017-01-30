@@ -170,7 +170,6 @@ public class Grid extends Application {
         
         File file = new File("gridPaneTest.txt");
         FileWriter writer = null;
-        writer = new FileWriter(file);
         
         
         
@@ -182,12 +181,18 @@ public class Grid extends Application {
         		gridPane.add(button, i, j, 1, 1);
         		
         		//EXPORT write to txt file
-                writer.write(button.getText());
-                
-               
+        		try {
+                    writer = new FileWriter(file);
+                    writer.write(button.getText());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (writer != null) try { writer.close(); } catch (IOException ignore) {}
+                }
+                System.out.printf("File is located at %s%n", file.getAbsolutePath());
         	}
         }
-        System.out.printf("File is located at %s%n", file.getAbsolutePath());
+        
 
         Scene scene = new Scene(gridPane, 600, 800);
         primaryStage.setScene(scene);

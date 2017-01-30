@@ -4,7 +4,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.util.Random;
-import java.io.File;
+
 //needed for exporting file
 import java.io.FileWriter;
 import java.io.IOException;
@@ -168,82 +168,26 @@ public class Grid extends Application {
         String[] cellTypes = {"0","1", "2", "a", "b"};
         Random rand = new Random();
         
-        File file = new File("gridPaneTest.txt");
-        FileWriter writer = null;
-        writer = new FileWriter(file);
-        
-        
         
         for (int i=0; i<120; i++){
         	for (int j=0; j<160;j++){
-        		int random = rand.nextInt(5);
+        		int  random = rand.nextInt(5);
         		//120 rows, 160 columns
         		Button button = new Button(cellTypes[random]);
         		gridPane.add(button, i, j, 1, 1);
-        		
-        		//EXPORT write to txt file
-                writer.write(button.getText());
-                
-               
         	}
         }
-        System.out.printf("File is located at %s%n", file.getAbsolutePath());
+        
 
         Scene scene = new Scene(gridPane, 600, 800);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
-		
-	
-	private String path;
-	private boolean append_to_file = false;
-		
-	public void writeToFile (GridPane gridPane) throws IOException{
-			FileWriter write = new FileWriter (path, append_to_file);
-			PrintWriter print_line = new PrintWriter(write);
-			
-			//String textString = gridPane.getChildren().get(i);
-			
-			//print_line.printf("%s" + "%n", textLine);
-			
-	}
-
 
     public static void main(String[] args){
         Application.launch(args);
         
         
-        //import
-        /*
-        String file_name = "testGrid.txt";
-        try{
-        	ReadFile file = new ReadFile(file_name);
-        	String[] aryLines = file.OpenFile();
-        	int i;
-        	for (int i = 0; i<aryLines.length; i++){
-        		System.out.println(aryLines[i]);
-        	
-        	}
-        }
-        catch (IOException e){
-        	System.out.println("FILE Was not exported");
-        	
-        }
-        */
-        
-        /*
-        File file = new File("gridPaneTest.txt");
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(file);
-            writer.write("");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (writer != null) try { writer.close(); } catch (IOException ignore) {}
-        }
-        System.out.printf("File is located at %s%n", file.getAbsolutePath());
-        */
       
     }
 }
