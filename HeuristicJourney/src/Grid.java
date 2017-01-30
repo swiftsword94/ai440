@@ -4,8 +4,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.util.Random;
-import java.util.ArrayList
-import java.util.PriorityQueue
+import java.util.ArrayList;
+import java.util.PriorityQueue;
 
 public class Grid extends Application {
 	public static class search
@@ -14,10 +14,83 @@ public class Grid extends Application {
 		{
 			
 		}
-		//will use euclidian distance
-		private float getHeuristic(Node start, Node end)
+		//uses manhattan distance to generate heuristic
+		//TODO: change to manhattan
+		public static double getHeuristic(Node start, Node end)
 		{
-			return (start.y-end.y)/(start.x-end.x);
+			return Math.sqrt(((double)Math.pow(start.y-end.y,2))+Math.pow(start.x-end.x, 2));
+		}
+		private static boolean isnDiagonal(Node start, Node end)
+		{
+			return (start.x-end.x==0&&start.y-end.y==0) ? false: true;
+		}
+		//gets cell to cell traversal cost (could this be inlined?)
+		private static double getCost(Node start, Node end)
+		{
+			switch(start.type)
+			{
+			case '1':
+			{
+				switch(end.type)
+				{
+				case '1':return (isnDiagonal(start, end)) ? 1: Math.sqrt(2);
+				case 'a': return (isnDiagonal(start, end)) ? 1: Math.sqrt(2);
+				case '2': return (isnDiagonal(start, end)) ? 1.5: (Math.sqrt(8)+Math.sqrt(2))/2;
+				case 'b': return (isnDiagonal(start, end)) ? 1.5: (Math.sqrt(8)+Math.sqrt(2))/2;
+				default: return 0;
+				}
+			}
+			case '2':
+			{
+				switch(end.type)
+				{
+				case '1':return (isnDiagonal(start, end)) ? 1.5: (Math.sqrt(8)+Math.sqrt(2))/2;
+				case 'a': return (isnDiagonal(start, end)) ? 1.5: (Math.sqrt(8)+Math.sqrt(2))/2;
+				case '2': return (isnDiagonal(start, end)) ? 2: Math.sqrt(8);
+				case 'b': return (isnDiagonal(start, end)) ? 2: Math.sqrt(8);
+				default: return 0;
+				}
+			}
+			case 'a':
+			{
+				switch(end.type)
+				{
+				case '1':return (isnDiagonal(start, end)) ? 1: Math.sqrt(2);
+				case 'a': return (isnDiagonal(start, end)) ? .25: Math.sqrt(2);
+				case '2': return (isnDiagonal(start, end)) ? 2: (Math.sqrt(8)+Math.sqrt(2))/2;
+				case 'b': return (isnDiagonal(start, end)) ? .375: (Math.sqrt(8)+Math.sqrt(2))/2;
+				default: return 0;
+				}
+			}
+			case 'b':
+			{
+				switch(end.type)
+				{
+				case '1':return (isnDiagonal(start, end)) ? 1.5: (Math.sqrt(8)+Math.sqrt(2))/2;
+				case 'a': return (isnDiagonal(start, end)) ? .375: (Math.sqrt(8)+Math.sqrt(2))/2;
+				case '2': return (isnDiagonal(start, end)) ? 2: Math.sqrt(8);
+				case 'b': return (isnDiagonal(start, end)) ? .5: Math.sqrt(8);
+				default: return 0;
+				}
+			}
+			default:
+				return 0;//trying to avoid throwing errors (I can make them but for time's sake ill leave it as it is)
+			}
+		}
+		private static boolean updateNode(PriorityQueue<Node> fringe, Node current, Node fptr, Node end)
+		{
+			if(current.distance + getCost(current, fptr) < fptr.distance)
+			{
+				fptr.distance = current.distance + getCost(current, fptr);
+				fptr.eCost = fptr.distance+search.getHeuristic(fptr, end);
+				fptr.parent = current;
+				if(fringe.contains(fptr))
+				{
+					fringe.remove(fptr);
+				}
+				fringe.add(fptr);
+			}
+			return false;
 		}
 		/*
 			This Method uses A* to traverse the grid from the start to end. 
@@ -28,12 +101,47 @@ public class Grid extends Application {
 		*/
 		public static ArrayList<Node> astar(ArrayList<ArrayList<Node>> grid, Node start, Node end)
 		{
-			Node ptr = start;
-			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors in the middle of a block
-			while(true)
+			if(start.equals(end))
 			{
-				//fill
+				return null;
 			}
+			
+			Node ptr = start, fptr;//current and fringe pointer nodes
+			ptr.parent=ptr;
+			//TODO: comparator for fringe?
+			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
+			ArrayList<Node> visited = new ArrayList<Node>();
+			fringe.add(ptr);
+			while(!fringe.isEmpty())
+			{
+				ptr = fringe.poll();
+				if(ptr.equals(end))
+				{
+					ArrayList<Node> res = new ArrayList<Node>();
+					for(;ptr!=start; ptr = ptr.parent)
+					{
+						res.add(ptr);
+					}
+					return res;
+				}
+				visited.add(ptr);
+				for(int i = 0; i<fringe.size();i++)//getting neighbors from current node
+				{
+					fptr = ptr.neighbors.get(i);//current neighbor of graph
+					if(!visited.contains(fptr))
+					{
+						if(!fringe.contains(fptr))//add to the fringe and set inf
+						{
+							fptr.distance = Double.POSITIVE_INFINITY;
+							fringe.add(fptr);
+						}
+						updateNode(fringe, ptr, fptr, end);
+					}
+				}
+			}
+			return null;
+			//return path
+			
 		}
 	}
 		@Override
