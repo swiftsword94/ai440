@@ -105,7 +105,7 @@ public class Grid extends Application {
 			@param end The end Cell needed to traverse to.
 			@see Cell
 		*/
-		public static ArrayList<Node> astar(ArrayList<ArrayList<Node>> grid, Node start, Node end)
+		public static ArrayList<Node> astar(Node start, Node end)
 		{
 			if(start.equals(end))
 			{
