@@ -16,16 +16,16 @@ public class Grid extends Application {
 		}
 		//uses manhattan distance to generate heuristic
 		//TODO: change to manhattan
-		private double getHeuristic(Node start, Node end)
+		public static double getHeuristic(Node start, Node end)
 		{
 			return Math.sqrt(((double)Math.pow(start.y-end.y,2))+Math.pow(start.x-end.x, 2));
 		}
-		private boolean isnDiagonal(Node start, Node end)
+		private static boolean isnDiagonal(Node start, Node end)
 		{
 			return (start.x-end.x==0&&start.y-end.y==0) ? false: true;
 		}
 		//gets cell to cell traversal cost (could this be inlined?)
-		private double getCost(Node start, Node end)
+		private static double getCost(Node start, Node end)
 		{
 			switch(start.type)
 			{
@@ -77,6 +77,21 @@ public class Grid extends Application {
 				return 0;//trying to avoid throwing errors (I can make them but for time's sake ill leave it as it is)
 			}
 		}
+		private static boolean updateNode(PriorityQueue<Node> fringe, Node current, Node fptr, Node end)
+		{
+			if(current.distance + getCost(current, fptr) < fptr.distance)
+			{
+				fptr.distance = current.distance + getCost(current, fptr);
+				fptr.eCost = fptr.distance+search.getHeuristic(fptr, end);
+				fptr.parent = current;
+				if(fringe.contains(fptr))
+				{
+					fringe.remove(fptr);
+				}
+				fringe.add(fptr);
+			}
+			return false;
+		}
 		/*
 			This Method uses A* to traverse the grid from the start to end. 
 			@param grid An arraylist of Cells that will be traversed.
@@ -91,31 +106,42 @@ public class Grid extends Application {
 				return null;
 			}
 			
-			Node ptr = start;
+			Node ptr = start, fptr;//current and fringe pointer nodes
+			ptr.parent=ptr;
 			//TODO: comparator for fringe?
 			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
 			ArrayList<Node> visited = new ArrayList<Node>();
-			ptr.parent=ptr;
-			
+			fringe.add(ptr);
 			while(!fringe.isEmpty())
 			{
-				fringe.poll();
+				ptr = fringe.poll();
+				if(ptr.equals(end))
+				{
+					ArrayList<Node> res = new ArrayList<Node>();
+					for(;ptr!=start; ptr = ptr.parent)
+					{
+						res.add(ptr);
+					}
+					return res;
+				}
+				visited.add(ptr);
 				for(int i = 0; i<fringe.size();i++)//getting neighbors from current node
 				{
-					if(!visited.contains(ptr.neighbors.get(i)))
+					fptr = ptr.neighbors.get(i);//current neighbor of graph
+					if(!visited.contains(fptr))
+					{
+						if(!fringe.contains(fptr))//add to the fringe and set inf
 						{
-							fringe.add(ptr.neighbors.get(i));
+							fptr.distance = Double.POSITIVE_INFINITY;
+							fringe.add(fptr);
 						}
+						updateNode(fringe, ptr, fptr, end);
+					}
 				}
 			}
-			
+			return null;
 			//return path
-			ArrayList<Node> res = new ArrayList<Node>();
-			for(;ptr!=start; ptr = ptr.parent)
-			{
-				res.add(ptr);
-			}
-			return res;
+			
 		}
 	}
 		@Override
