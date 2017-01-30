@@ -150,14 +150,26 @@ public class Grid extends Application {
 			
 		}
 	}
-		@Override
-	    public void start(Stage primaryStage) throws Exception {
-        primaryStage.setTitle("Grid");
-      
-        GridPane gridPane = new GridPane();
-
-        
-        //creates grid
+	
+	public void start(Stage primaryStage) throws Exception{
+		primaryStage.setTitle("Grid");
+		GridPane gridPane = new GridPane();
+		
+		for (int i=0; i<120; i++){
+			for (int j=0; j<160;j++){
+				//120 i rows, 160 j columns
+				Button button = new Button("1");
+				gridPane.add(button, j, i, 1, 1);
+			}
+		}
+		
+		Scene scene = new Scene(gridPane, 600, 800);
+    	primaryStage.setScene(scene);
+    	primaryStage.show();
+		
+	}
+	
+		
         //0 indicates blocked cell
         //1 indicates regular unblocked cell
         //2 indicates hard to traverse cell
@@ -168,45 +180,18 @@ public class Grid extends Application {
         String[] cellTypes = {"0","1", "2", "a", "b"};
         Random rand = new Random();
         
-        File file = new File("gridPaneTest.txt");
-        FileWriter writer = null;
-        writer = new FileWriter(file);
         
+        //create grid with unblocked cells
+        //create 31x31 hard to traverse cells
+        //create river function for cells
+        //create blocked cells
+        //export map function to text
         
-        
-        for (int i=0; i<120; i++){
-        	for (int j=0; j<160;j++){
-        		int random = rand.nextInt(5);
-        		//120 rows, 160 columns
-        		Button button = new Button(cellTypes[random]);
-        		gridPane.add(button, i, j, 1, 1);
-        		
-        		//EXPORT write to txt file
-                writer.write(button.getText());
-                
-               
-        	}
-        }
-        System.out.printf("File is located at %s%n", file.getAbsolutePath());
 
-        Scene scene = new Scene(gridPane, 600, 800);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
-		
-	
-	private String path;
-	private boolean append_to_file = false;
-		
-	public void writeToFile (GridPane gridPane) throws IOException{
-			FileWriter write = new FileWriter (path, append_to_file);
-			PrintWriter print_line = new PrintWriter(write);
-			
-			//String textString = gridPane.getChildren().get(i);
-			
-			//print_line.printf("%s" + "%n", textLine);
-			
-	}
+        
+        public void exportMap(GridPane grid){
+        	
+        }
 
 
     public static void main(String[] args){
