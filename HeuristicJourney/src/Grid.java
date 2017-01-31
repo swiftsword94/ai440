@@ -1,6 +1,7 @@
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.util.Random;
@@ -163,7 +164,12 @@ public class Grid extends Application {
 			}
 		}
 		
-		Scene scene = new Scene(gridPane, 600, 800);
+		ScrollPane spane = new ScrollPane();
+		spane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		spane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		spane.setContent(gridPane);
+		
+		Scene scene = new Scene(spane, 800, 600);
     	primaryStage.setScene(scene);
     	primaryStage.show();
 		
