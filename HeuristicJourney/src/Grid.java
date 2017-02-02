@@ -1,8 +1,4 @@
-import javafx.application.Application;
-import javafx.scene.*;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.stage.Stage;
+
 import java.util.Random;
 import java.io.File;
 //needed for exporting file
@@ -13,7 +9,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
-public class Grid extends Application {
+public class Grid {
 	public static class search
 	{
 		public search()
@@ -151,52 +147,117 @@ public class Grid extends Application {
 		}
 	}
 	
-	public void start(Stage primaryStage) throws Exception{
-		primaryStage.setTitle("Grid");
-		GridPane gridPane = new GridPane();
+	
+	ArrayList<ArrayList<Node>> Grid = new ArrayList<ArrayList<Node>>();
+	Node cell = new Node();
+	
+	
+	//create grid
+	public static ArrayList<ArrayList<Node>> createGrid(){
+		//1 indicates regular unblocked cell
 		
-		for (int i=0; i<120; i++){
-			for (int j=0; j<160;j++){
-				//120 i rows, 160 j columns
-				Button button = new Button("1");
-				gridPane.add(button, j, i, 1, 1);
+		
+		ArrayList<ArrayList<Node>> grid = new ArrayList<ArrayList<Node>>();
+			
+		
+		//creates all unblocked cells
+		for (int row=0; row<120; row++){
+			grid.add(new ArrayList<Node>());		
+			for (int col=0; col<160; col++){
+				Node cell = new Node();
+				cell.type='1';
+				grid.get(row).add(cell);
+				//System.out.print('1');
+				
 			}
+			//System.out.println();
 		}
 		
-		Scene scene = new Scene(gridPane, 600, 800);
-    	primaryStage.setScene(scene);
-    	primaryStage.show();
 		
+		//create 31x31 50% hard cells
+		/*	
+		Random rand = new Random();
+				
+			int hardCells = 0;
+			while (hardCells<8){
+				
+				
+		int randomRow = rand.nextInt(89);
+		int randomCol = rand.nextInt(129);
+				
+				//if gridPane.getChild = !hardcell
+					for (int hRow = 0; hRow<31; hRow++){
+						for (int hCol = 0; hCol<31; hCol++){
+							Button button = new Button("2");
+							
+						}		
+					}
+					
+					hardCells++;
+					continue;
+					
+				//}
+					
+					/*
+					else{
+						continue;
+					}
+					*/
+				
+					
+				
+				
+				
+				//create rivers
+				
+				//Random rand = new Random();
+				//int randomRiverRow = rand.nextInt(120);
+				//int randomRiverCol = rand.nextInt(160);
+				
+				//make array with random cells that are along the edge
+				
+				
+				
+				//random function to choose random cell from edge array;
+				
+				//4 cases for cell depending on its location
+				
+				//if top, then no traversal top
+				
+				//if right, then no traversal right
+				
+				//if bot, then no traversal bot
+				
+				//if left, then no traversal left
+			
+				
+			
+				
+				
+			
+		return grid;
 	}
-	
-		
-        //0 indicates blocked cell
-        //1 indicates regular unblocked cell
-        //2 indicates hard to traverse cell
-        //a indicates regular unblocked cell with highway
-        //b indicates hard to traverse cell with a highway
-        
-        //randomize function for unique cell
-        String[] cellTypes = {"0","1", "2", "a", "b"};
-        Random rand = new Random();
-        
-        
-        //create grid with unblocked cells
-        //create 31x31 hard to traverse cells
-        //create river function for cells
-        //create blocked cells
-        //export map function to text
-        
-
-        
-        public void exportMap(GridPane grid){
-        	
-        }
 
 
     public static void main(String[] args){
-        Application.launch(args);
-        
+    	
+    	ArrayList<ArrayList<Node>> grid = createGrid();
+    	
+    	ArrayList<Node> test = new ArrayList<Node>();
+    
+    	
+    	test = search.astar(grid.get(1).get(1), grid.get(100).get(100));
+   
+    	System.out.println(test.get(0).type);
+    	
+    	/*
+    	for (int i = 0; i<test.size(); i++){
+    		System.out.print(test.get(i));
+    	}
+    	
+    	*/
+    	//System.out.print(search.astar(grid.get(1).get(1), grid.get(100).get(100)));
+        System.out.println("end");
         
         //import
         /*
