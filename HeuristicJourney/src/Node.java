@@ -10,6 +10,12 @@ public class Node implements Comparable<Node>
 	public Node()
 	{
 	}
+	public Node(char type, int x, int y)
+	{
+		this.type = type;
+		this.x = x;
+		this.y = y;
+	}
 	@Override
 	public int compareTo(Node o) {
 		if(this.eCost<o.eCost)

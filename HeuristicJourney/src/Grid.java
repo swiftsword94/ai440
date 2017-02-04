@@ -1,3 +1,9 @@
+import javafx.application.Application;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
 
 import java.util.Random;
 import java.io.File;
@@ -12,6 +18,9 @@ import java.util.PriorityQueue;
 public class Grid {
 	public static class search
 	{
+		
+		
+		
 		public search()
 		{
 			
@@ -94,6 +103,9 @@ public class Grid {
 			}
 			return false;
 		}
+		
+		
+		
 		/*
 			This Method uses A* to traverse the grid from the start to end. 
 			@param grid An arraylist of Cells that will be traversed.
@@ -152,11 +164,46 @@ public class Grid {
 	Node cell = new Node();
 	
 	
+	public static Node setNeighbors(ArrayList<ArrayList<Node>> grid, Node cell){
+		
+		int x = cell.x;
+		int y = cell.y;
+		
+		
+		//cell top left
+		if ( ! ( (x-1 == -1) && (y-1 == -1) ) ){
+			//cell.neighbors.add(grid.get(x-1).get(y-1));
+			//System.out.println(x + y);
+			
+		}
+		
+		/*
+		//cell top
+		if ( ! ( (!(x-1 == -1)) && (y-1 == -1))){
+			cell.neighbors.add(grid.get(x).get(y-1));
+		}
+		
+
+		ScrollPane spane = new ScrollPane();
+		spane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		spane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		spane.setContent(gridPane);
+		
+		Scene scene = new Scene(spane, 800, 600);
+    	primaryStage.setScene(scene);
+    	primaryStage.show();
+
+		
+	}
+	
+	
+	
 	//create grid
 	public static ArrayList<ArrayList<Node>> createGrid(){
 		//1 indicates regular unblocked cell
 		
 		
+
 		ArrayList<ArrayList<Node>> grid = new ArrayList<ArrayList<Node>>();
 			
 		
@@ -164,13 +211,14 @@ public class Grid {
 		for (int row=0; row<120; row++){
 			grid.add(new ArrayList<Node>());		
 			for (int col=0; col<160; col++){
-				Node cell = new Node();
-				cell.type='1';
+				Node cell = new Node('1', col, row);
 				grid.get(row).add(cell);
-				//System.out.print('1');
+				//populate with neighbors
+				setNeighbors(grid, cell);
+				//System.out.print('*');
 				
 			}
-			//System.out.println();
+			//System.out.println(row);
 		}
 		
 		
@@ -241,14 +289,25 @@ public class Grid {
 
     public static void main(String[] args){
     	
+    	
+    	
+    	
+    	
     	ArrayList<ArrayList<Node>> grid = createGrid();
     	
     	ArrayList<Node> test = new ArrayList<Node>();
     
     	
+    	//System.out.print(grid.get(0).get(0).type);
+    	
+    	Node n = new Node();
+
+    	
     	test = search.astar(grid.get(1).get(1), grid.get(100).get(100));
    
-    	System.out.println(test.get(0).type);
+    
+    	
+    	//System.out.println(test.get(0).type);
     	
     	/*
     	for (int i = 0; i<test.size(); i++){
