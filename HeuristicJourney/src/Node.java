@@ -15,6 +15,7 @@ public class Node implements Comparable<Node>
 		this.type = type;
 		this.x = x;
 		this.y = y;
+		this.neighbors = new ArrayList<Node>(8);
 	}
 	@Override
 	public int compareTo(Node o) {
