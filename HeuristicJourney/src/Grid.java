@@ -1,16 +1,19 @@
 import javafx.application.Application;
-import javafx.scene.*;
-import javafx.scene.control.*;
+import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import java.util.Random;
-import java.io.File;
-//needed for exporting file
+
+import java.io.File;//needed for exporting file
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-
+import java.util.Random;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
@@ -154,28 +157,128 @@ public class Grid extends Application {
 	
 	public void start(Stage primaryStage) throws Exception{
 		primaryStage.setTitle("Grid");
+		
+		double cellSize = 10;
+		int row = 120;
+		int col = 160;
+		Canvas grid = new Canvas(cellSize*row, cellSize*col);
 		GridPane gridPane = new GridPane();
-		
-		for (int i=0; i<120; i++){
-			for (int j=0; j<160;j++){
-				//120 i rows, 160 j columns
-				Button button = new Button("1");
-				gridPane.add(button, j, i, 1, 1);
-			}
-		}
-		
 		ScrollPane spane = new ScrollPane();
+		Scene scene = new Scene(gridPane, 800, 600);
+		
 		spane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		spane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
-		spane.setContent(gridPane);
 		
-		Scene scene = new Scene(spane, 800, 600);
+		ArrayList<ArrayList<Node>> graph = new ArrayList<ArrayList<Node>>();
+		GraphicsContext gContext = grid.getGraphicsContext2D();
+		//pixel size of cell
+		
+		gridPane.add(spane, 0, 0);
+		spane.setContent(grid);
     	primaryStage.setScene(scene);
     	primaryStage.show();
-		
+    	
+    	drawBoard(gContext, graph, cellSize, row, col);
+    	Button redraw = new Button("RD");
+    	
+    	gridPane.add(redraw, 1, 0);
+    	redraw.autosize();
 	}
-	
-		
+	public void drawBoard(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize, int row, int col)
+	{
+		grid.fill();
+    	makeCellBorders(grid, cellSize+1);
+    	drawCells(grid, graph, cellSize);
+	}
+	public void makeCellBorders(GraphicsContext graph, double size)
+	{
+		double height = graph.getCanvas().getHeight();
+		double width = graph.getCanvas().getWidth();
+		if (size > height)
+		{
+			graph.getCanvas().setHeight(size);
+		}
+		if (size > width)
+		{
+			graph.getCanvas().setWidth(size);
+		}
+		graph.setLineWidth(1.0);
+		graph.setStroke(Color.BLACK);
+		for(double i = 0; i < width; i+=size)//vertical
+		{
+			graph.moveTo(i, 0);
+			graph.strokeLine(i, 0, i, height);
+		}
+		for(double i = 0; i < height; i+=size)//horizontal
+		{
+			graph.moveTo(i, 0);
+			graph.strokeLine(0, i, width, i);
+		}
+	}
+	//
+	/*
+	 * Draws a single cell on a canvas. This method assumes displayed lines on the grid are 1 pixel wide
+	 * @param grid an array
+	 */
+	public void drawCell(GraphicsContext grid, Node node, double cellSize)
+	{
+		switch(node.type)
+		{
+		case '0':
+			grid.setFill(Color.BLACK);
+			grid.fillRect(node.x*cellSize+node.x, node.y*cellSize+node.y, cellSize, cellSize);
+			return;
+		case '1':
+			grid.setFill(Color.CHARTREUSE);
+			grid.fillRect(node.x*cellSize+node.x, node.y*cellSize+node.y, cellSize, cellSize);
+			return;
+		case '2':
+			grid.setFill(Color.DARKGREEN);
+			grid.fillRect(node.x*cellSize+node.x, node.y*cellSize+node.y, cellSize, cellSize);
+			return;
+		case 'a':
+			grid.setFill(Color.CHARTREUSE);
+			grid.fillRect(node.x*cellSize+node.x, node.y*cellSize+node.y, cellSize, cellSize);
+			return;
+		case 'b':
+			grid.setFill(Color.DARKGREEN);
+			grid.fillRect(node.x*cellSize+node.x, node.y*cellSize+node.y, cellSize, cellSize);
+			return;
+		default:
+			return;
+		}
+	}
+	public void drawCells(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize)
+	{
+		for(int x = 0; x < graph.size(); x++)
+		{
+			for(int y = 0; y < graph.get(x).size(); y++)
+			{
+				drawCell(grid, graph.get(x).get(y), cellSize);
+			}
+		}
+	}
+	public void drawHighways(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize)
+	{
+		Node ptr = null, neighbor = null;
+		grid.setStroke(Color.DARKGOLDENROD);
+		for(int x = 0; x < graph.size(); x++)
+		{
+			for(int y = 0; y < graph.get(x).size(); y++)//for every node in the graph
+			{
+				ptr = graph.get(x).get(y);
+				if(ptr.type == 'a'||ptr.type == 'b')//if they are a highway
+				{
+					for(int i = 0; i<ptr.neighbors.size(); i++)//connect them to their highway neighbors
+					{
+						neighbor = ptr.neighbors.get(i);
+						if(search.isnDiagonal(ptr, neighbor)&&(neighbor.type=='a'||neighbor.type=='b'))
+						grid.strokeLine(ptr.x*cellSize+ptr.x, ptr.y*cellSize+ptr.y, neighbor.x*cellSize+neighbor.x, neighbor.y*cellSize+neighbor.y);
+					}
+				}
+			}
+		}
+	}
         //0 indicates blocked cell
         //1 indicates regular unblocked cell
         //2 indicates hard to traverse cell
