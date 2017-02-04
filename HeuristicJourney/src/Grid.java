@@ -9,17 +9,23 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import java.io.File;//needed for exporting file
+import java.util.Random;
+import java.io.File;
+//needed for exporting file
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Random;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
-public class Grid extends Application {
+public class Grid {
+	ArrayList<ArrayList<Node>> Grid = new ArrayList<ArrayList<Node>>();
+	Node cell = new Node();
 	public static class search
 	{
+		
+		
+		
 		public search()
 		{
 			
@@ -102,6 +108,9 @@ public class Grid extends Application {
 			}
 			return false;
 		}
+		
+		
+		
 		/*
 			This Method uses A* to traverse the grid from the start to end. 
 			@param grid An arraylist of Cells that will be traversed.
@@ -155,6 +164,7 @@ public class Grid extends Application {
 		}
 	}
 	
+
 	public void start(Stage primaryStage) throws Exception{
 		primaryStage.setTitle("Grid");
 		
@@ -163,6 +173,7 @@ public class Grid extends Application {
 		int col = 160;
 		Canvas grid = new Canvas(cellSize*row, cellSize*col);
 		GridPane gridPane = new GridPane();
+		
 		ScrollPane spane = new ScrollPane();
 		Scene scene = new Scene(gridPane, 800, 600);
 		
@@ -172,17 +183,38 @@ public class Grid extends Application {
 		ArrayList<ArrayList<Node>> graph = new ArrayList<ArrayList<Node>>();
 		GraphicsContext gContext = grid.getGraphicsContext2D();
 		//pixel size of cell
-		
+
 		gridPane.add(spane, 0, 0);
 		spane.setContent(grid);
-    	primaryStage.setScene(scene);
-    	primaryStage.show();
-    	
-    	drawBoard(gContext, graph, cellSize, row, col);
-    	Button redraw = new Button("RD");
-    	
-    	gridPane.add(redraw, 1, 0);
-    	redraw.autosize();
+		primaryStage.setScene(scene);
+		primaryStage.show();
+		
+		drawBoard(gContext, graph, cellSize, row, col);
+		Button redraw = new Button("RD");
+		
+		gridPane.add(redraw, 1, 0);
+		redraw.autosize();
+}
+
+	
+	public static Node setNeighbors(ArrayList<ArrayList<Node>> grid, Node cell){
+		
+		int x = cell.x;
+		int y = cell.y;
+		
+		
+		//cell top left
+		if ( ! ( (x-1 == -1) && (y-1 == -1) ) ){
+			//cell.neighbors.add(grid.get(x-1).get(y-1));
+			//System.out.println(x + y);
+			
+		}
+		
+		//cell top
+		if ( ! ( (!(x-1 == -1)) && (y-1 == -1))){
+			cell.neighbors.add(grid.get(x).get(y-1));
+		}
+		
 	}
 	public void drawBoard(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize, int row, int col)
 	{
@@ -190,6 +222,7 @@ public class Grid extends Application {
     	makeCellBorders(grid, cellSize+1);
     	drawCells(grid, graph, cellSize);
 	}
+	
 	public void makeCellBorders(GraphicsContext graph, double size)
 	{
 		double height = graph.getCanvas().getHeight();
@@ -215,6 +248,7 @@ public class Grid extends Application {
 			graph.strokeLine(0, i, width, i);
 		}
 	}
+	
 	//
 	/*
 	 * Draws a single cell on a canvas. This method assumes displayed lines on the grid are 1 pixel wide
@@ -279,33 +313,126 @@ public class Grid extends Application {
 			}
 		}
 	}
-        //0 indicates blocked cell
-        //1 indicates regular unblocked cell
-        //2 indicates hard to traverse cell
-        //a indicates regular unblocked cell with highway
-        //b indicates hard to traverse cell with a highway
-        
-        //randomize function for unique cell
-        String[] cellTypes = {"0","1", "2", "a", "b"};
-        Random rand = new Random();
-        
-        
-        //create grid with unblocked cells
-        //create 31x31 hard to traverse cells
-        //create river function for cells
-        //create blocked cells
-        //export map function to text
-        
+	
+	
+	
+	//create grid
+	public static ArrayList<ArrayList<Node>> createGrid(){
+		//1 indicates regular unblocked cell
 
-        
-        public void exportMap(GridPane grid){
-        	
-        }
+		ArrayList<ArrayList<Node>> grid = new ArrayList<ArrayList<Node>>();
+			
+		
+		//creates all unblocked cells
+		for (int row=0; row<120; row++){
+			grid.add(new ArrayList<Node>());		
+			for (int col=0; col<160; col++){
+				Node cell = new Node('1', col, row);
+				grid.get(row).add(cell);
+				//populate with neighbors
+				setNeighbors(grid, cell);
+				//System.out.print('*');
+				
+			}
+			//System.out.println(row);
+		}
+		
+		
+		//create 31x31 50% hard cells
+		/*	
+		Random rand = new Random();
+				
+			int hardCells = 0;
+			while (hardCells<8){
+				
+				
+		int randomRow = rand.nextInt(89);
+		int randomCol = rand.nextInt(129);
+				
+				//if gridPane.getChild = !hardcell
+					for (int hRow = 0; hRow<31; hRow++){
+						for (int hCol = 0; hCol<31; hCol++){
+							Button button = new Button("2");
+							
+						}		
+					}
+					
+					hardCells++;
+					continue;
+					
+				//}
+					
+					/*
+					else{
+						continue;
+					}
+					*/
+				
+					
+				
+				
+				
+				//create rivers
+				
+				//Random rand = new Random();
+				//int randomRiverRow = rand.nextInt(120);
+				//int randomRiverCol = rand.nextInt(160);
+				
+				//make array with random cells that are along the edge
+				
+				
+				
+				//random function to choose random cell from edge array;
+				
+				//4 cases for cell depending on its location
+				
+				//if top, then no traversal top
+				
+				//if right, then no traversal right
+				
+				//if bot, then no traversal bot
+				
+				//if left, then no traversal left
+			
+				
+			
+				
+				
+			
+		return grid;
+	}
 
 
     public static void main(String[] args){
-        Application.launch(args);
-        
+    	
+    	
+    	
+    	
+    	
+    	ArrayList<ArrayList<Node>> grid = createGrid();
+    	
+    	ArrayList<Node> test = new ArrayList<Node>();
+    
+    	
+    	//System.out.print(grid.get(0).get(0).type);
+    	
+    	Node n = new Node();
+
+    	
+    	test = search.astar(grid.get(1).get(1), grid.get(100).get(100));
+   
+    
+    	
+    	//System.out.println(test.get(0).type);
+    	
+    	/*
+    	for (int i = 0; i<test.size(); i++){
+    		System.out.print(test.get(i));
+    	}
+    	
+    	*/
+    	//System.out.print(search.astar(grid.get(1).get(1), grid.get(100).get(100)));
+        System.out.println("end");
         
         //import
         /*
