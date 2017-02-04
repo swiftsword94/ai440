@@ -18,7 +18,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
-public class Grid {
+public class Grid extends Application{
 	ArrayList<ArrayList<Node>> Grid = new ArrayList<ArrayList<Node>>();
 	Node cell = new Node();
 	public static class search
@@ -210,10 +210,12 @@ public class Grid {
 			
 		}
 		
+		/*
 		//cell top
 		if ( ! ( (!(x-1 == -1)) && (y-1 == -1))){
 			cell.neighbors.add(grid.get(x).get(y-1));
 		}
+		*/
 		
 	}
 	public void drawBoard(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize, int row, int col)
@@ -318,6 +320,7 @@ public class Grid {
 	
 	//create grid
 	public static ArrayList<ArrayList<Node>> createGrid(){
+		
 		//1 indicates regular unblocked cell
 
 		ArrayList<ArrayList<Node>> grid = new ArrayList<ArrayList<Node>>();
@@ -406,7 +409,7 @@ public class Grid {
     public static void main(String[] args){
     	
     	
-    	
+    	launch(args);
     	
     	
     	ArrayList<ArrayList<Node>> grid = createGrid();
