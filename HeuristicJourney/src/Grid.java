@@ -197,7 +197,7 @@ public class Grid {
 }
 
 	
-	public static Node setNeighbors(ArrayList<ArrayList<Node>> grid, Node cell){
+	public static void setNeighbors(ArrayList<ArrayList<Node>> grid, Node cell){
 		
 		int x = cell.x;
 		int y = cell.y;
