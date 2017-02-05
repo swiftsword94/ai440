@@ -180,7 +180,7 @@ public class Grid extends Application{
 		spane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		spane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		
-		ArrayList<ArrayList<Node>> graph = new ArrayList<ArrayList<Node>>();
+		ArrayList<ArrayList<Node>> graph = Grid;
 		GraphicsContext gContext = grid.getGraphicsContext2D();
 		//pixel size of cell
 
@@ -202,20 +202,44 @@ public class Grid extends Application{
 		int x = cell.x;
 		int y = cell.y;
 		
-		
-		//cell top left
-		if ( ! ( (x-1 == -1) && (y-1 == -1) ) ){
-			//cell.neighbors.add(grid.get(x-1).get(y-1));
-			//System.out.println(x + y);
-			
+		//cells on left
+		if (x != 0){
+			if(y!=0)
+			{
+				cell.neighbors.add(grid.get(y-1).get(x-1));
+			}
+			cell.neighbors.add(grid.get(y).get(x-1));
+			if(y!=grid.size()-1)
+			{
+				cell.neighbors.add(grid.get(y+1).get(x-1));
+			}
 		}
 		
-		/*
-		//cell top
-		if ( ! ( (!(x-1 == -1)) && (y-1 == -1))){
-			cell.neighbors.add(grid.get(x).get(y-1));
+		//right
+		if (x !=grid.get(y).size()-1){
+			if(y!=0)
+			{
+				cell.neighbors.add(grid.get(y-1).get(x+1));
+			}
+			cell.neighbors.add(grid.get(y).get(x+1));
+			if(y!=grid.size()-1)
+			{
+				cell.neighbors.add(grid.get(y+1).get(x+1));
+			}
 		}
-		*/
+		//top
+		if(y!=0)
+		{
+			cell.neighbors.add(grid.get(y-1).get(x));
+		}
+		
+		//bottom
+		if(y!=grid.size()-1)
+		{
+			cell.neighbors.add(grid.get(y+1).get(x));
+		}
+		
+		
 		
 	}
 	public void drawBoard(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize, int row, int col)
@@ -333,11 +357,19 @@ public class Grid extends Application{
 				Node cell = new Node('1', col, row);
 				grid.get(row).add(cell);
 				//populate with neighbors
-				setNeighbors(grid, cell);
+				//setNeighbors(grid, cell);
 				//System.out.print('*');
 				
 			}
 			//System.out.println(row);
+		}
+		
+		//set neighbors
+		for (int row=0; row<120; row++){		
+			for (int col=0; col<160; col++){
+				setNeighbors(grid, grid.get(row).get(col));
+			}
+			
 		}
 		
 		
@@ -401,7 +433,6 @@ public class Grid extends Application{
 			
 				
 				
-			
 		return grid;
 	}
 
@@ -409,10 +440,11 @@ public class Grid extends Application{
     public static void main(String[] args){
     	
     	
-    	launch(args);
-    	
+  
     	
     	ArrayList<ArrayList<Node>> grid = createGrid();
+    	//Grid = grid;
+    	launch(args);
     	
     	ArrayList<Node> test = new ArrayList<Node>();
     
@@ -426,7 +458,7 @@ public class Grid extends Application{
    
     
     	
-    	//System.out.println(test.get(0).type);
+    	System.out.println(test.get(0).type);
     	
     	/*
     	for (int i = 0; i<test.size(); i++){
