@@ -374,35 +374,89 @@ public class Grid extends Application{
 		
 		
 		//create 31x31 50% hard cells
-		/*	
+		//randomly choose 8 coordinates
+		
+		
 		Random rand = new Random();
+		
+		int xRand1, xRand2, xRand3, xRand4, xRand5, xRand6, xRand7, xRand8;
+		int yRand1, yRand2, yRand3, yRand4, yRand5, yRand6, yRand7, yRand8;
+		
+		xRand1 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand1 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand1);System.out.println(" , " +yRand1);System.out.println();
+		for (int hRow = (yRand1-8); hRow < (yRand1+8) ; hRow++){
+			for (int hCol = (xRand1-8); hCol < (xRand1+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+		
+		xRand2 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand2 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand2);System.out.println(" , " +yRand2);System.out.println();
+		for (int hRow = (yRand2-8); hRow < (yRand2+8) ; hRow++){
+			for (int hCol = (xRand2-8); hCol < (xRand2+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+		
+		xRand3 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand3 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand3);System.out.print(" , " +yRand3);System.out.println();
+		for (int hRow = (yRand3-8); hRow < (yRand3+8) ; hRow++){
+			for (int hCol = (xRand3-8); hCol < (xRand3+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+		
+		xRand4 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand4 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand4);System.out.print(" , " +yRand4);System.out.println();
+		for (int hRow = (yRand4-8); hRow < (yRand4+8) ; hRow++){
+			for (int hCol = (xRand4-8); hCol < (xRand4+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+
+		xRand5 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand5 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand5);System.out.print(" , " +yRand5);System.out.println();
+		for (int hRow = (yRand5-8); hRow < (yRand5+8) ; hRow++){
+			for (int hCol = (xRand5-8); hCol < (xRand5+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+		
+		xRand6 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand6 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand6);System.out.print(" , " +yRand6);System.out.println();
+		for (int hRow = (yRand6-8); hRow < (yRand6+8) ; hRow++){
+			for (int hCol = (xRand6-8); hCol < (xRand6+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+		
+		xRand7 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand7 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand7);System.out.print(" , " +yRand7);System.out.println();
+		for (int hRow = (yRand7-8); hRow < (yRand7+8) ; hRow++){
+			for (int hCol = (xRand7-8); hCol < (xRand7+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+		
+		xRand8 = rand.nextInt(grid.get(0).size() - 17) + 17;
+		yRand8 = rand.nextInt(grid.size() - 17) + 17;
+		System.out.print(xRand8);System.out.print(" , " + yRand8);System.out.println();
+		for (int hRow = (yRand8-8); hRow < (yRand8+8) ; hRow++){
+			for (int hCol = (xRand8-8); hCol < (xRand8+8); hCol++){
+				grid.get(hRow).get(hCol).type = '2';
+			}
+		}
+		
 				
-			int hardCells = 0;
-			while (hardCells<8){
 				
-				
-		int randomRow = rand.nextInt(89);
-		int randomCol = rand.nextInt(129);
-				
-				//if gridPane.getChild = !hardcell
-					for (int hRow = 0; hRow<31; hRow++){
-						for (int hCol = 0; hCol<31; hCol++){
-							Button button = new Button("2");
-							
-						}		
-					}
-					
-					hardCells++;
-					continue;
-					
-				//}
-					
-					/*
-					else{
-						continue;
-					}
-					*/
-				
+			
 					
 				
 				
@@ -445,29 +499,15 @@ public class Grid extends Application{
     	
     	world.Grid = createGrid();
     	
-    	launch(args);
-    	
     	ArrayList<Node> test = new ArrayList<Node>();
-    
-    	
-    	//System.out.print(grid.get(0).get(0).type);
-    	
-    	Node n = new Node();
-
     	
     	test = search.astar(world.Grid.get(1).get(1), world.Grid.get(100).get(100));
-   
-    
     	
-    	System.out.println(test.get(0).type);
+    	launch(args);
     	
-    	/*
-    	for (int i = 0; i<test.size(); i++){
-    		System.out.print(test.get(i));
-    	}
+
     	
-    	*/
-    	//System.out.print(search.astar(grid.get(1).get(1), grid.get(100).get(100)));
+    	
         System.out.println("end");
         
         //import
