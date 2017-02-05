@@ -137,14 +137,14 @@ public class Grid extends Application{
 				if(ptr.equals(end))
 				{
 					ArrayList<Node> res = new ArrayList<Node>();
-					for(;ptr!=start; ptr = ptr.parent)
+					for(;ptr!=start; ptr = ptr.parent)//return the path back to start
 					{
 						res.add(ptr);
 					}
 					return res;
 				}
 				visited.add(ptr);
-				for(int i = 0; i<fringe.size();i++)//getting neighbors from current node
+				for(int i = 0; i<ptr.neighbors.size();i++)//getting neighbors from current node
 				{
 					fptr = ptr.neighbors.get(i);//current neighbor of graph
 					if(!visited.contains(fptr))
@@ -441,9 +441,10 @@ public class Grid extends Application{
     	
     	
   
+    	Grid world = new Grid();
     	
-    	ArrayList<ArrayList<Node>> grid = createGrid();
-    	//Grid = grid;
+    	world.Grid = createGrid();
+    	
     	launch(args);
     	
     	ArrayList<Node> test = new ArrayList<Node>();
@@ -454,7 +455,7 @@ public class Grid extends Application{
     	Node n = new Node();
 
     	
-    	test = search.astar(grid.get(1).get(1), grid.get(100).get(100));
+    	test = search.astar(world.Grid.get(1).get(1), world.Grid.get(100).get(100));
    
     
     	
