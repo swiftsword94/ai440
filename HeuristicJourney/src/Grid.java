@@ -165,13 +165,14 @@ public class Grid extends Application{
 	}
 	
 
-	public void start(Stage primaryStage) throws Exception{
+	public void start(Stage primaryStage) throws Exception
+	{
 		primaryStage.setTitle("Grid");
 		
 		double cellSize = 10;
 		int row = 120;
 		int col = 160;
-		Canvas grid = new Canvas(cellSize*row, cellSize*col);
+		Canvas grid = new Canvas(cellSize*col, cellSize*row);
 		GridPane gridPane = new GridPane();
 		
 		ScrollPane spane = new ScrollPane();
@@ -189,11 +190,15 @@ public class Grid extends Application{
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		
-		drawBoard(gContext, graph, cellSize, row, col);
-		Button redraw = new Button("RD");
+		Grid world = new Grid();
+		world.createGrid(120, 160);
+		ArrayList<Node> test = new ArrayList<Node>();
 		
-		gridPane.add(redraw, 1, 0);
-		redraw.autosize();
+		drawBoard(gContext, world.Grid, cellSize, row, col);
+		//Button redraw = new Button("RD");
+		
+		//gridPane.add(redraw, 1, 0);
+		//redraw.autosize();
 }
 
 	
@@ -244,9 +249,11 @@ public class Grid extends Application{
 	}
 	public void drawBoard(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize, int row, int col)
 	{
+		grid.setFill(Color.WHITE);
 		grid.fill();
     	makeCellBorders(grid, cellSize+1);
     	drawCells(grid, graph, cellSize);
+    	drawHighways(grid, graph, cellSize);
 	}
 	
 	public void makeCellBorders(GraphicsContext graph, double size)
@@ -310,11 +317,13 @@ public class Grid extends Application{
 	}
 	public void drawCells(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize)
 	{
-		for(int x = 0; x < graph.size(); x++)
+		
+		for(int y = 0; y < graph.size(); y++)
 		{
-			for(int y = 0; y < graph.get(x).size(); y++)
+			for(int x = 0; x < graph.get(y).size(); x++)
 			{
-				drawCell(grid, graph.get(x).get(y), cellSize);
+			
+				drawCell(grid, graph.get(y).get(x), cellSize);
 			}
 		}
 	}
@@ -322,11 +331,11 @@ public class Grid extends Application{
 	{
 		Node ptr = null, neighbor = null;
 		grid.setStroke(Color.DARKGOLDENROD);
-		for(int x = 0; x < graph.size(); x++)
+		for(int y = 0; y < graph.size(); y++)
 		{
-			for(int y = 0; y < graph.get(x).size(); y++)//for every node in the graph
+			for(int x = 0; x < graph.get(y).size(); x++)//for every node in the graph
 			{
-				ptr = graph.get(x).get(y);
+				ptr = graph.get(y).get(x);
 				if(ptr.type == 'a'||ptr.type == 'b')//if they are a highway
 				{
 					for(int i = 0; i<ptr.neighbors.size(); i++)//connect them to their highway neighbors
@@ -339,176 +348,93 @@ public class Grid extends Application{
 			}
 		}
 	}
-	
-	
-	
+	public static void addHardCellBlock(ArrayList<ArrayList<Node>> grid, int xCoord, int yCoord, int size)
+	{
+		
+		Random rand = new Random();
+		if(size%2==0)
+		{
+			size++;
+		}
+		
+		for(int x = xCoord; x < grid.get(yCoord).size()&& (x < xCoord+(size/2+1)); x++)//right
+		{
+			for(int y = yCoord; y >= 0 && (y > yCoord-(size/2+1)); y--)//righttop+middle
+			{
+				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+			}
+			for(int y = yCoord+1; y < grid.size() && (y < yCoord+(size/2+1)); y++)//rightbottom
+			{
+				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+			}
+		}
+		for(int x = xCoord-1; x >= 0 && (x > xCoord-(size/2+1)); x--)//left
+		{
+			for(int y = yCoord; y >= 0 && (y > yCoord-(size/2+1)); y--)//lefttop+middle
+			{
+				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+			}
+			for(int y = yCoord+1; y < grid.size() && (y < yCoord+(size/2+1)); y++)//leftbottom
+			{
+				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+			}
+		}
+	}
+	public static void addHighway(ArrayList<ArrayList<Node>> graph, int xCoord, int yCoord)
+	{
+		int x = xCoord, y = yCoord;
+		Random random = new Random();
+		do
+		{
+		}
+		while(random.nextDouble()<.6);
+	}
 	//create grid
-	public static ArrayList<ArrayList<Node>> createGrid(){
+	public ArrayList<ArrayList<Node>> createGrid(int height, int width)
+	{
 		
 		//1 indicates regular unblocked cell
 
-		ArrayList<ArrayList<Node>> grid = new ArrayList<ArrayList<Node>>();
 			
 		
 		//creates all unblocked cells
-		for (int row=0; row<120; row++){
-			grid.add(new ArrayList<Node>());		
-			for (int col=0; col<160; col++){
-				Node cell = new Node('1', col, row);
-				grid.get(row).add(cell);
-				//populate with neighbors
-				//setNeighbors(grid, cell);
-				//System.out.print('*');
-				
+		for (int row=0; row<height; row++)
+		{
+			this.Grid.add(new ArrayList<Node>());		
+			for (int col=0; col<width; col++)
+			{
+				this.Grid.get(row).add(new Node('1', col, row));
 			}
 			//System.out.println(row);
 		}
 		
 		//set neighbors
-		for (int row=0; row<120; row++){		
-			for (int col=0; col<160; col++){
-				setNeighbors(grid, grid.get(row).get(col));
+		for (int row=0; row<height; row++)
+		{		
+			for (int col=0; col<width; col++)
+			{
+				setNeighbors(this.Grid, this.Grid.get(row).get(col));
 			}
 			
 		}
 		
-		
-		//create 31x31 50% hard cells
-		//randomly choose 8 coordinates
-		
-		
-		Random rand = new Random();
-		
-		int xRand1, xRand2, xRand3, xRand4, xRand5, xRand6, xRand7, xRand8;
-		int yRand1, yRand2, yRand3, yRand4, yRand5, yRand6, yRand7, yRand8;
-		
-		xRand1 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand1 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand1);System.out.println(" , " +yRand1);System.out.println();
-		for (int hRow = (yRand1-8); hRow < (yRand1+8) ; hRow++){
-			for (int hCol = (xRand1-8); hCol < (xRand1+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
+		for(int i = 0;i < 8;i++)//fills the map with hard cells
+		{
+			addHardCellBlock(this.Grid, (int)Math.round(Math.random()*(width-1)),(int)Math.round(Math.random()*height-1), 31);
 		}
 		
-		xRand2 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand2 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand2);System.out.println(" , " +yRand2);System.out.println();
-		for (int hRow = (yRand2-8); hRow < (yRand2+8) ; hRow++){
-			for (int hCol = (xRand2-8); hCol < (xRand2+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
-		}
+		//DO HIGHWAYS
 		
-		xRand3 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand3 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand3);System.out.print(" , " +yRand3);System.out.println();
-		for (int hRow = (yRand3-8); hRow < (yRand3+8) ; hRow++){
-			for (int hCol = (xRand3-8); hCol < (xRand3+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
-		}
-		
-		xRand4 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand4 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand4);System.out.print(" , " +yRand4);System.out.println();
-		for (int hRow = (yRand4-8); hRow < (yRand4+8) ; hRow++){
-			for (int hCol = (xRand4-8); hCol < (xRand4+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
-		}
-
-		xRand5 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand5 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand5);System.out.print(" , " +yRand5);System.out.println();
-		for (int hRow = (yRand5-8); hRow < (yRand5+8) ; hRow++){
-			for (int hCol = (xRand5-8); hCol < (xRand5+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
-		}
-		
-		xRand6 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand6 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand6);System.out.print(" , " +yRand6);System.out.println();
-		for (int hRow = (yRand6-8); hRow < (yRand6+8) ; hRow++){
-			for (int hCol = (xRand6-8); hCol < (xRand6+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
-		}
-		
-		xRand7 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand7 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand7);System.out.print(" , " +yRand7);System.out.println();
-		for (int hRow = (yRand7-8); hRow < (yRand7+8) ; hRow++){
-			for (int hCol = (xRand7-8); hCol < (xRand7+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
-		}
-		
-		xRand8 = rand.nextInt(grid.get(0).size() - 17) + 17;
-		yRand8 = rand.nextInt(grid.size() - 17) + 17;
-		System.out.print(xRand8);System.out.print(" , " + yRand8);System.out.println();
-		for (int hRow = (yRand8-8); hRow < (yRand8+8) ; hRow++){
-			for (int hCol = (xRand8-8); hCol < (xRand8+8); hCol++){
-				grid.get(hRow).get(hCol).type = '2';
-			}
-		}
-		
-				
-				
-			
-					
-				
-				
-				
-				//create rivers
-				
-				//Random rand = new Random();
-				//int randomRiverRow = rand.nextInt(120);
-				//int randomRiverCol = rand.nextInt(160);
-				
-				//make array with random cells that are along the edge
-				
-				
-				
-				//random function to choose random cell from edge array;
-				
-				//4 cases for cell depending on its location
-				
-				//if top, then no traversal top
-				
-				//if right, then no traversal right
-				
-				//if bot, then no traversal bot
-				
-				//if left, then no traversal left
-			
-				
-			
-				
-				
-		return grid;
+		return this.Grid;
 	}
 
 
-    public static void main(String[] args){
+    public static void main(String[] args)
+    {
     	
+    	//test = search.astar(world.Grid.get(1).get(1), world.Grid.get(100).get(100));
     	
-  
-    	Grid world = new Grid();
-    	
-    	world.Grid = createGrid();
-    	
-    	ArrayList<Node> test = new ArrayList<Node>();
-    	
-    	test = search.astar(world.Grid.get(1).get(1), world.Grid.get(100).get(100));
-    	
-    	launch(args);
-    	
-
-    	
-    	
-        System.out.println("end");
+    	Application.launch(args);
         
         //import
         /*

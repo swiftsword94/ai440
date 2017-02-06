@@ -1,0 +1,20 @@
+\documentclass[12pt]{article}
+\title{Project 1}
+\author{Scott Reyes, Christian Suasi}
+
+\begin{document}
+	\maketitle
+	\section*{a.}
+	\section*{b.}
+	\section*{c.}
+	\section*{d. Heuristics}
+	The heuristic that I chose was the Euclidean distance between the node being considered and the end node. For any two points,there is no shorter distance than: $$D=\sqrt[2]{x^2+y^2}$$
+	Thus using this heuristic, we can never overestimate the distance between the two nodes. This heuristic is consistent(and consequently admissible) because the graph is organized by integer coordinates similar to a Euclidean plane. Calculating the heuristic between them would have to be quick which - while the formula is short - the square root function is not.
+
+	Other possibilities for heuristics would include:
+
+	Manhattan distance:	the cost of traversal that can be made using the difference of the x coordinate of the current node and the goal node, and the difference of the y coordinate of the current node and the goal node
+	\section*{e.}
+	\section*{f. Cost}
+	Uniform Cost search will essentially be on par with Dijkstra's search algorithm. A* will perform generally better due to assigning higher heuristic costs to the other nodes, thus discouraging the expansion of nodes.
+\end{document}
