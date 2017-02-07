@@ -16,6 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class Grid extends Application{
@@ -361,33 +362,109 @@ public class Grid extends Application{
 		{
 			for(int y = yCoord; y >= 0 && (y > yCoord-(size/2+1)); y--)//righttop+middle
 			{
-				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+				grid.get(y).get(x).type = (rand.nextBoolean())?'1':'2'; 
 			}
 			for(int y = yCoord+1; y < grid.size() && (y < yCoord+(size/2+1)); y++)//rightbottom
 			{
-				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+				grid.get(y).get(x).type = (rand.nextBoolean())?'1':'2'; 
 			}
 		}
 		for(int x = xCoord-1; x >= 0 && (x > xCoord-(size/2+1)); x--)//left
 		{
 			for(int y = yCoord; y >= 0 && (y > yCoord-(size/2+1)); y--)//lefttop+middle
 			{
-				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+				grid.get(y).get(x).type = (rand.nextBoolean())?'1':'2'; 
 			}
 			for(int y = yCoord+1; y < grid.size() && (y < yCoord+(size/2+1)); y++)//leftbottom
 			{
-				grid.get(y).get(x).type = (Math.round(rand.nextDouble())==1)?'1':'2'; 
+				grid.get(y).get(x).type = (rand.nextBoolean())?'1':'2'; 
 			}
 		}
 	}
-	public static void addHighway(ArrayList<ArrayList<Node>> graph, int xCoord, int yCoord)
+	public static List<Node> addHighway(ArrayList<ArrayList<Node>> graph, int xCoord, int yCoord)
 	{
-		int x = xCoord, y = yCoord;
+		int x = xCoord, y = yCoord, length = 20;
+		char direction;
 		Random random = new Random();
-		do
+		List<Node> highway = null;
+		//pick direction from start
+		if(x == 0)
 		{
+			if(y == 0)
+			{
+				direction = (random.nextBoolean())?'r':'d';
+			}
+			else if(y == graph.size())
+			{
+				direction = (random.nextBoolean())?'r':'u';
+			}
+			else
+			{
+				direction = 'r';
+			}
 		}
-		while(random.nextDouble()<.6);
+		else if(x == graph.get(y).size())
+		{
+			if(y == 0)
+			{
+				direction = (random.nextBoolean())?'l':'d';
+			}
+			else if(y == graph.size())
+			{
+				direction = (random.nextBoolean())?'l':'u';
+			}
+			else
+			{
+				direction = 'l';
+			}
+		}
+		else
+		{
+			if(y == 0)
+			{
+				direction = 'd';
+			}
+			else if(y == graph.size())
+			{
+				direction = 'u';
+			}
+			else
+			{
+				return null;
+			}
+		}
+		switch(direction)//draws lines given a direction
+		{
+		case 'u':
+		{
+			for(;y < yCoord + length;y--)
+			{
+				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
+			}
+			break;
+		}
+		case 'd':
+			for(;y < yCoord + length ;y++)
+			{
+				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
+			}
+			break;
+		case 'l':
+			for(;x < xCoord + length ;x--)
+			{
+				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
+			}
+			break;
+		case 'r':
+			for(;x < xCoord + length; x++)
+			{
+				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
+			}
+			break;
+		default:
+			return null;
+		}
+		return highway;
 	}
 	//create grid
 	public ArrayList<ArrayList<Node>> createGrid(int height, int width)
