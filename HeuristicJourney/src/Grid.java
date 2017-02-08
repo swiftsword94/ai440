@@ -142,6 +142,7 @@ public class Grid extends Application{
 					{
 						res.add(ptr);
 					}
+					res.add(ptr);
 					return res;
 				}
 				visited.add(ptr);
@@ -170,7 +171,7 @@ public class Grid extends Application{
 	{
 		primaryStage.setTitle("Grid");
 		
-		double cellSize = 5;
+		double cellSize = 10;
 		int row = 120;
 		int col = 160;
 		Canvas grid = new Canvas(cellSize*col, cellSize*row);
@@ -200,6 +201,9 @@ public class Grid extends Application{
 		redraw.setOnAction((e)->{ world.createGrid(120,160);world.drawBoard(gContext, world.Grid, cellSize, row, col);});
 		gridPane.add(redraw, 1, 0);
 		redraw.autosize();
+		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0), world.Grid.get(100).get(100));
+		drawPath(gContext, path, cellSize);
+		
 }
 
 	
@@ -322,15 +326,26 @@ public class Grid extends Application{
 		{
 			for(int x = 0; x < graph.get(y).size(); x++)
 			{
-			
 				drawCell(grid, graph.get(y).get(x), cellSize);
 			}
+		}
+	}
+	
+	public void drawPath(GraphicsContext grid, ArrayList<Node> path, double cellSize)
+	{
+		Node ptr = null, neighbor = null;
+		grid.setStroke(Color.BLUEVIOLET);
+		for(int i = path.size()-1; i > 0; i--)
+		{
+			ptr = path.get(i);
+			neighbor = path.get(i-1);
+			grid.strokeLine(ptr.x*cellSize+cellSize/2+ptr.x, ptr.y*cellSize+cellSize/2+ptr.y, neighbor.x*cellSize+cellSize/2+neighbor.x, neighbor.y*cellSize+cellSize/2+neighbor.y);
 		}
 	}
 	public void drawHighways(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize)
 	{
 		Node ptr = null, neighbor = null;
-		grid.setStroke(Color.CHOCOLATE);
+		grid.setStroke(Color.MAROON);
 		for(int y = 0; y < graph.size(); y++)
 		{
 			for(int x = 0; x < graph.get(y).size(); x++)//for every node in the graph
@@ -342,7 +357,7 @@ public class Grid extends Application{
 					{
 						neighbor = ptr.neighbors.get(i);
 						if(search.isnDiagonal(ptr, neighbor)&&(neighbor.type=='a'||neighbor.type=='b'))
-						grid.strokeLine(ptr.x*cellSize+ptr.x, ptr.y*cellSize+ptr.y, neighbor.x*cellSize+neighbor.x, neighbor.y*cellSize+neighbor.y);
+						grid.strokeLine(ptr.x*cellSize+cellSize/2 + ptr.x, ptr.y*cellSize+cellSize/2+ptr.y, neighbor.x*cellSize+cellSize/2+neighbor.x, neighbor.y*cellSize+cellSize/2+neighbor.y);
 					}
 				}
 			}
@@ -608,6 +623,32 @@ public class Grid extends Application{
 			}
 		}
 	}
+	public boolean addBlockedCell(ArrayList<ArrayList<Node>> graph, int x, int y)
+	{
+		if(graph.get(y).get(x).type == 'a'|| graph.get(y).get(x).type == 'b')
+		{
+			return false;
+		}
+		else
+		{
+			graph.get(y).get(x).type = '0';
+			return true;
+		}
+	}
+	public void fillBlockedCells(ArrayList<ArrayList<Node>> graph, int cellnum)
+	{
+		Random rand = new Random();
+		int x = 0, y = 0;
+		for(int i = 0;i<cellnum;)
+		{
+			y = (int) Math.round(rand.nextDouble()*(graph.size()-1));
+			x = (int) Math.round(rand.nextDouble()*(graph.get(y).size()-1));
+			if(addBlockedCell(graph, x, y))
+			{
+				i++;
+			}
+		}
+	}
 	//create grid
 	public ArrayList<ArrayList<Node>> createGrid(int height, int width)
 	{
@@ -638,6 +679,8 @@ public class Grid extends Application{
 		
 		//DO HIGHWAYS
 		fillHighways(this.Grid, 4);
+		//DO Blocked Cells
+		fillBlockedCells(this.Grid, (int)Math.round(this.Grid.size()*this.Grid.get(0).size()*.2));
 		return this.Grid;
 	}
 
@@ -645,7 +688,7 @@ public class Grid extends Application{
     public static void main(String[] args)
     {
     	
-    	//test = search.astar(world.Grid.get(1).get(1), world.Grid.get(100).get(100));
+    	
     	
     	Application.launch(args);
         
