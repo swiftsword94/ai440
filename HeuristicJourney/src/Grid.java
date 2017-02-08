@@ -170,7 +170,7 @@ public class Grid extends Application{
 	{
 		primaryStage.setTitle("Grid");
 		
-		double cellSize = 10;
+		double cellSize = 5;
 		int row = 120;
 		int col = 160;
 		Canvas grid = new Canvas(cellSize*col, cellSize*row);
@@ -196,10 +196,10 @@ public class Grid extends Application{
 		ArrayList<Node> test = new ArrayList<Node>();
 		
 		drawBoard(gContext, world.Grid, cellSize, row, col);
-		//Button redraw = new Button("RD");
-		
-		//gridPane.add(redraw, 1, 0);
-		//redraw.autosize();
+		Button redraw = new Button("RD");
+		redraw.setOnAction((e)->{ world.createGrid(120,160);world.drawBoard(gContext, world.Grid, cellSize, row, col);});
+		gridPane.add(redraw, 1, 0);
+		redraw.autosize();
 }
 
 	
@@ -283,8 +283,7 @@ public class Grid extends Application{
 		}
 	}
 	
-	//
-	/*
+	/**
 	 * Draws a single cell on a canvas. This method assumes displayed lines on the grid are 1 pixel wide
 	 * @param grid an array
 	 */
@@ -331,7 +330,7 @@ public class Grid extends Application{
 	public void drawHighways(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize)
 	{
 		Node ptr = null, neighbor = null;
-		grid.setStroke(Color.DARKGOLDENROD);
+		grid.setStroke(Color.CHOCOLATE);
 		for(int y = 0; y < graph.size(); y++)
 		{
 			for(int x = 0; x < graph.get(y).size(); x++)//for every node in the graph
@@ -381,12 +380,16 @@ public class Grid extends Application{
 			}
 		}
 	}
-	public static List<Node> addHighway(ArrayList<ArrayList<Node>> graph, int xCoord, int yCoord)
+	
+	public static ArrayList<Node> addHighway(ArrayList<ArrayList<Node>> graph, int xCoord, int yCoord, int length)
 	{
-		int x = xCoord, y = yCoord, length = 20;
+		int x = xCoord, y = yCoord;
 		char direction;
+		double dirchoice;
+		boolean isEnd = false;
 		Random random = new Random();
-		List<Node> highway = null;
+		ArrayList<Node> highway = new ArrayList<Node>();
+		
 		//pick direction from start
 		if(x == 0)
 		{
@@ -394,7 +397,7 @@ public class Grid extends Application{
 			{
 				direction = (random.nextBoolean())?'r':'d';
 			}
-			else if(y == graph.size())
+			else if(y == graph.size()-1)
 			{
 				direction = (random.nextBoolean())?'r':'u';
 			}
@@ -403,13 +406,13 @@ public class Grid extends Application{
 				direction = 'r';
 			}
 		}
-		else if(x == graph.get(y).size())
+		else if(x == graph.get(y).size()-1)
 		{
 			if(y == 0)
 			{
 				direction = (random.nextBoolean())?'l':'d';
 			}
-			else if(y == graph.size())
+			else if(y == graph.size()-1)
 			{
 				direction = (random.nextBoolean())?'l':'u';
 			}
@@ -424,7 +427,7 @@ public class Grid extends Application{
 			{
 				direction = 'd';
 			}
-			else if(y == graph.size())
+			else if(y == graph.size()-1)
 			{
 				direction = 'u';
 			}
@@ -433,47 +436,181 @@ public class Grid extends Application{
 				return null;
 			}
 		}
-		switch(direction)//draws lines given a direction
+		//continue forward
+		while(!isEnd)
 		{
-		case 'u':
-		{
-			for(;y < yCoord + length;y--)
+			switch(direction)//draws lines given a direction
 			{
-				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
+			case 'u':
+				for(int i = 0; i < length; i++, y--)
+				{
+					if(y == 0 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y+1).get(x)))
+					{
+						isEnd = true;
+						break;
+					}
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					{
+						highway.add(graph.get(y).get(x));
+					}
+					else
+					{
+						return null;
+					}
+				}
+				break;
+			case 'd':
+				for(int i = 0; i < length; i++, y++)
+				{
+					if(y == graph.size()-1 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y-1).get(x)))
+					{
+						isEnd = true;
+						break;
+					}
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					{
+						highway.add(graph.get(y).get(x));
+					}
+					else
+					{
+						return null;
+					}
+				}
+				break;
+			case 'l':
+				for(int i = 0; i < length; i++, x--)
+				{
+					if(x == 0 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y).get(x+1)))
+					{
+						isEnd = true;
+						break;
+					}
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					{
+						highway.add(graph.get(y).get(x));
+					}
+					else
+					{
+						return null;
+					}
+				}
+				break;
+			case 'r':
+				for(int i = 0; i < length; i++, x++)
+				{
+					if(x == graph.get(y).size()-1 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y).get(x-1)))
+					{
+						isEnd = true;
+						break;
+					}
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					{
+						highway.add(graph.get(y).get(x));
+					}
+					else
+					{
+						return null;
+					}
+				}
+				break;
+			default:
+				return null;
 			}
-			break;
+			//chooses which direction to go
+			dirchoice = random.nextDouble();  
+			if(dirchoice < .6)
+			{
+				//go the same direction
+			}
+			else if(dirchoice < .8)//go counterclockwise
+			{
+				switch(direction)
+				{
+				case 'u':direction = 'l';
+				case 'd':direction = 'r';
+				case 'l':direction = 'd';
+				case 'r':direction = 'u';
+				default:return null;
+				}
+			}
+			else//go clockwise
+			{
+				switch(direction)
+				{
+				case 'u':direction = 'r';
+				case 'd':direction = 'l';
+				case 'l':direction = 'u';
+				case 'r':direction = 'd';
+				default:return null;
+				}
+			}
 		}
-		case 'd':
-			for(;y < yCoord + length ;y++)
-			{
-				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
-			}
-			break;
-		case 'l':
-			for(;x < xCoord + length ;x--)
-			{
-				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
-			}
-			break;
-		case 'r':
-			for(;x < xCoord + length; x++)
-			{
-				graph.get(y).get(x).type = (graph.get(y).get(x).type=='1')? 'a' : 'b';
-			}
-			break;
-		default:
+		
+		//checking highway validity
+		if(highway.size()<100)
+		{
 			return null;
 		}
+		
 		return highway;
+	}
+	/**
+	 * Randomly fills a board with highways 
+	 * @param graph An ArrayList of ArayList of Nodes represented in the form of a Cartesian plane.
+	 * @param nHighways The number of highways to fill the board with.
+	 */
+	public static void fillHighways(ArrayList<ArrayList<Node>> graph, int nHighways)
+	{
+		ArrayList<Node> highway = new ArrayList<Node>();
+		int x = 0, y = 0;
+		Random rand = new Random();
+		/*
+		 * I need to pick a number that resides on the outside boundaries of the walls randomly
+		 * I could simply get all of the edge nodes and choose randomly
+		 * I could try to pick a side and then pick a number  
+		 */
+		//pick a side
+		double side;
+		
+		for(int i = 0; i < nHighways;)
+		{
+			side = rand.nextDouble();  
+			if(side < .25)//top
+			{
+				y = 0;
+				x = (int)Math.round(rand.nextDouble()*(graph.get(y).size()-1));
+			}
+			else if(side < .50)//bottom
+			{
+				y = graph.size()-1;
+				x = (int)Math.round(rand.nextDouble()*(graph.get(y).size()-1));
+			}
+			else if(side < .75)//left
+			{
+				y = (int)Math.round(rand.nextDouble()*(graph.size()-1));
+				x = 0;
+			}
+			else//right
+			{
+				y = (int)Math.round(rand.nextDouble()*(graph.size()-1));
+				x = graph.get(y).size()-1;
+			}
+			
+			highway = addHighway(graph, x, y, 20);
+			if(highway != null)
+			{
+				i++;
+				for(Node e : highway)
+				{
+					e.type = (e.type  =='1')? 'a' : 'b';
+				}
+				System.out.println(i);
+			}
+		}
 	}
 	//create grid
 	public ArrayList<ArrayList<Node>> createGrid(int height, int width)
 	{
-		
-		//1 indicates regular unblocked cell
-
-			
-		
 		//creates all unblocked cells
 		for (int row=0; row<height; row++)
 		{
@@ -484,7 +621,6 @@ public class Grid extends Application{
 			}
 			//System.out.println(row);
 		}
-		
 		//set neighbors
 		for (int row=0; row<height; row++)
 		{		
@@ -501,7 +637,7 @@ public class Grid extends Application{
 		}
 		
 		//DO HIGHWAYS
-		
+		fillHighways(this.Grid, 4);
 		return this.Grid;
 	}
 
