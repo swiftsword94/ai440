@@ -10,6 +10,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.Random;
+import java.util.function.BiFunction;
+import java.util.function.ToDoubleBiFunction;
 import java.io.File;
 //needed for exporting file
 import java.io.FileWriter;
@@ -31,11 +33,22 @@ public class Grid extends Application{
 		{
 			
 		}
+		
+		/**
+		 * 
+		 * @param node the current Node in question
+		 * @return true if the node is traversable
+		 */
+		public static boolean isTraversable(Node node)
+		{
+			return (node.type == '1'|| node.type == '2'|| node.type == 'a'|| node.type == 'b')?true:false;
+		}
+		
 		//uses manhattan distance to generate heuristic
 		//TODO: change to manhattan
 		public static double getHeuristic(Node start, Node end)
 		{
-			return Math.sqrt(((double)Math.pow(start.y-end.y,2))+Math.pow(start.x-end.x, 2));
+			return Math.sqrt(((double)Math.pow(start.y-end.y,2))+Math.pow(start.x-end.x, 2))/4;
 		}
 		private static boolean isnDiagonal(Node start, Node end)
 		{
@@ -94,12 +107,12 @@ public class Grid extends Application{
 				return 0;//trying to avoid throwing errors (I can make them but for time's sake ill leave it as it is)
 			}
 		}
-		private static boolean updateNode(PriorityQueue<Node> fringe, Node current, Node fptr, Node end)
+		private static boolean updateNode(PriorityQueue<Node> fringe, Node current, Node fptr, Node end, ToDoubleBiFunction<Node, Node> heuristic)
 		{
 			if(current.distance + getCost(current, fptr) < fptr.distance)
 			{
 				fptr.distance = current.distance + getCost(current, fptr);
-				fptr.eCost = fptr.distance+search.getHeuristic(fptr, end);
+				fptr.eCost = fptr.distance+heuristic.applyAsDouble(fptr, end);
 				fptr.parent = current;
 				if(fringe.contains(fptr))
 				{
@@ -125,7 +138,10 @@ public class Grid extends Application{
 			{
 				return null;
 			}
-			
+			if(!isTraversable(start))
+			{
+				return null;
+			}
 			Node ptr = start, fptr;//current and fringe pointer nodes
 			ptr.parent=ptr;
 			//TODO: comparator for fringe?
@@ -149,14 +165,15 @@ public class Grid extends Application{
 				for(int i = 0; i<ptr.neighbors.size();i++)//getting neighbors from current node
 				{
 					fptr = ptr.neighbors.get(i);//current neighbor of graph
-					if(!visited.contains(fptr))
+					if(isTraversable(fptr)&&!visited.contains(fptr))
 					{
 						if(!fringe.contains(fptr))//add to the fringe and set inf
 						{
+							//May require an if valid node check
 							fptr.distance = Double.POSITIVE_INFINITY;
 							fringe.add(fptr);
 						}
-						updateNode(fringe, ptr, fptr, end);
+						updateNode(fringe, ptr, fptr, end, (a, b)->getHeuristic(a, b));
 					}
 				}
 			}
@@ -174,7 +191,7 @@ public class Grid extends Application{
 		double cellSize = 10;
 		int row = 120;
 		int col = 160;
-		Canvas grid = new Canvas(cellSize*col, cellSize*row);
+		Canvas grid = new Canvas(cellSize*col+col, cellSize*row+row);
 		GridPane gridPane = new GridPane();
 		
 		ScrollPane spane = new ScrollPane();
@@ -183,7 +200,6 @@ public class Grid extends Application{
 		spane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		spane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		
-		ArrayList<ArrayList<Node>> graph = Grid;
 		GraphicsContext gContext = grid.getGraphicsContext2D();
 		//pixel size of cell
 
@@ -194,26 +210,28 @@ public class Grid extends Application{
 		
 		Grid world = new Grid();
 		world.createGrid(120, 160);
-		ArrayList<Node> test = new ArrayList<Node>();
 		
 		drawBoard(gContext, world.Grid, cellSize, row, col);
 		Button redraw = new Button("RD");
 		redraw.setOnAction((e)->{ world.createGrid(120,160);world.drawBoard(gContext, world.Grid, cellSize, row, col);});
 		gridPane.add(redraw, 1, 0);
-		redraw.autosize();
-		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0), world.Grid.get(100).get(100));
+		
+		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0), world.Grid.get(119).get(159));
 		drawPath(gContext, path, cellSize);
+		
+
 		
 }
 
 	
-	public static void setNeighbors(ArrayList<ArrayList<Node>> grid, Node cell){
+	public void setNeighbors(ArrayList<ArrayList<Node>> grid, Node cell){
 		
 		int x = cell.x;
 		int y = cell.y;
 		
 		//cells on left
-		if (x != 0){
+		if (x != 0)
+		{
 			if(y!=0)
 			{
 				cell.neighbors.add(grid.get(y-1).get(x-1));
@@ -226,7 +244,8 @@ public class Grid extends Application{
 		}
 		
 		//right
-		if (x !=grid.get(y).size()-1){
+		if (x !=grid.get(y).size()-1)
+		{
 			if(y!=0)
 			{
 				cell.neighbors.add(grid.get(y-1).get(x+1));
@@ -335,6 +354,11 @@ public class Grid extends Application{
 	{
 		Node ptr = null, neighbor = null;
 		grid.setStroke(Color.BLUEVIOLET);
+		grid.setLineWidth(3);
+		if(path==null)
+		{
+			return ;
+		}
 		for(int i = path.size()-1; i > 0; i--)
 		{
 			ptr = path.get(i);
@@ -346,6 +370,7 @@ public class Grid extends Application{
 	{
 		Node ptr = null, neighbor = null;
 		grid.setStroke(Color.MAROON);
+		grid.setLineWidth(3);
 		for(int y = 0; y < graph.size(); y++)
 		{
 			for(int x = 0; x < graph.get(y).size(); x++)//for every node in the graph
@@ -619,7 +644,6 @@ public class Grid extends Application{
 				{
 					e.type = (e.type  =='1')? 'a' : 'b';
 				}
-				System.out.println(i);
 			}
 		}
 	}
@@ -645,6 +669,7 @@ public class Grid extends Application{
 			x = (int) Math.round(rand.nextDouble()*(graph.get(y).size()-1));
 			if(addBlockedCell(graph, x, y))
 			{
+				
 				i++;
 			}
 		}
@@ -660,7 +685,6 @@ public class Grid extends Application{
 			{
 				this.Grid.get(row).add(new Node('1', col, row));
 			}
-			//System.out.println(row);
 		}
 		//set neighbors
 		for (int row=0; row<height; row++)
