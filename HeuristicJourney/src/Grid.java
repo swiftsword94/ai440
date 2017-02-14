@@ -5,13 +5,16 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.Random;
 import java.util.function.BiFunction;
 import java.util.function.ToDoubleBiFunction;
+
 import java.io.File;
 //needed for exporting file
 import java.io.FileWriter;
@@ -52,7 +55,11 @@ public class Grid extends Application{
 		}
 		private static boolean isnDiagonal(Node start, Node end)
 		{
-			return (start.x-end.x==0&&start.y-end.y==0) ? false: true;
+			return ((start.x==end.x&&!(start.y==end.y))||((!(start.x==end.x)&&start.y==end.y))) ? true: false;
+		}
+		public static <T> boolean isInBounds(ArrayList<ArrayList<T>> grid, int x, int y)
+		{
+			return (y < grid.size()&& x < grid.get(y).size())? true : false;
 		}
 		//gets cell to cell traversal cost (could this be inlined?)
 		private static double getCost(Node start, Node end)
@@ -107,12 +114,26 @@ public class Grid extends Application{
 				return 0;//trying to avoid throwing errors (I can make them but for time's sake ill leave it as it is)
 			}
 		}
+		/**
+		 * Updates the Node fptr with new distance, eCost, and parent values depending on the given heuristic  
+		 * @param fringe
+		 * @param current the current node
+		 * @param fptr a neighbor of a node being searched
+		 * @param end The goal node of a search
+		 * @param heuristic A function which calculates an estimated distance from fptr to end and returns a double 
+		 * @return
+		 */
 		private static boolean updateNode(PriorityQueue<Node> fringe, Node current, Node fptr, Node end, ToDoubleBiFunction<Node, Node> heuristic)
 		{
 			if(current.distance + getCost(current, fptr) < fptr.distance)
 			{
+				double estimatedDistance = 0;
 				fptr.distance = current.distance + getCost(current, fptr);
-				fptr.eCost = fptr.distance+heuristic.applyAsDouble(fptr, end);
+				if(heuristic!=null)
+				{
+					estimatedDistance = heuristic.applyAsDouble(fptr, end);
+				}
+				fptr.eCost = fptr.distance+estimatedDistance;
 				fptr.parent = current;
 				if(fringe.contains(fptr))
 				{
@@ -132,7 +153,7 @@ public class Grid extends Application{
 			@param end The end Cell needed to traverse to.
 			@see Cell
 		*/
-		public static ArrayList<Node> astar(Node start, Node end)
+		public static ArrayList<Node> astar(Node start, Node end, ToDoubleBiFunction<Node, Node> heuristicFunction )
 		{
 			if(start.equals(end))
 			{
@@ -211,12 +232,51 @@ public class Grid extends Application{
 		Grid world = new Grid();
 		world.createGrid(120, 160);
 		
-		drawBoard(gContext, world.Grid, cellSize, row, col);
-		Button redraw = new Button("RD");
-		redraw.setOnAction((e)->{ world.createGrid(120,160);world.drawBoard(gContext, world.Grid, cellSize, row, col);});
-		gridPane.add(redraw, 1, 0);
 		
-		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0), world.Grid.get(119).get(159));
+		//text fields
+		TextField xStart = new TextField("xStart");
+		TextField yStart = new TextField("yStart");
+		TextField xEnd = new TextField("xEnd");
+		TextField yEnd = new TextField("yEnd");
+		
+		//Buttons
+		Button randomize = new Button("Randomize"), reset = new Button("Reset"), searchPath = new Button("Search");
+		randomize.setOnAction((e)->
+		{
+			world.createGrid(120,160);
+			world.drawBoard(gContext, world.Grid, cellSize, row, col);
+			drawPath(gContext,
+					search.astar(world.Grid.get(0).get(0),
+							world.Grid.get(119).get(159),
+							(Node a, Node b)->{return search.getHeuristic(a, b);}),
+					cellSize);
+		});
+		searchPath.setOnAction((e)->
+		{
+			int xS = 0, yS = 0, xE = 0, yE = 0;
+			world.drawBoard(gContext, world.Grid, cellSize, row, col);
+			xS = Integer.parseInt(xStart.getText());
+			yS = Integer.parseInt(yStart.getText());
+			xE = Integer.parseInt(xEnd.getText());
+			yE = Integer.parseInt(yEnd.getText());
+			
+			if(search.isInBounds(world.Grid, xS, yS)&&search.isInBounds(world.Grid, xE, yE))
+			{
+				drawPath(gContext,
+						search.astar(world.Grid.get(yS).get(xS),
+								world.Grid.get(yE).get(xE),
+								(Node a, Node b)->{return search.getHeuristic(a, b);}),
+						cellSize);
+			}
+			
+		});
+		
+		//stacking layouts
+		VBox panel = new VBox(randomize, searchPath, xStart, yStart, xEnd, yEnd);
+		gridPane.add(panel, 1, 0);
+		
+		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b)->{return search.getHeuristic(a, b);});
+		drawBoard(gContext, world.Grid, cellSize, row, col);
 		drawPath(gContext, path, cellSize);
 		
 
@@ -678,6 +738,7 @@ public class Grid extends Application{
 	public ArrayList<ArrayList<Node>> createGrid(int height, int width)
 	{
 		//creates all unblocked cells
+		this.Grid = new ArrayList<ArrayList<Node>>();
 		for (int row=0; row<height; row++)
 		{
 			this.Grid.add(new ArrayList<Node>());		
@@ -698,7 +759,7 @@ public class Grid extends Application{
 		
 		for(int i = 0;i < 8;i++)//fills the map with hard cells
 		{
-			addHardCellBlock(this.Grid, (int)Math.round(Math.random()*(width-1)),(int)Math.round(Math.random()*height-1), 31);
+			addHardCellBlock(this.Grid, (int)Math.round(Math.random()*(width-1)),(int)Math.round(Math.random()*(height-1)), 31);
 		}
 		
 		//DO HIGHWAYS
