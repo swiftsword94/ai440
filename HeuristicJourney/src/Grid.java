@@ -544,7 +544,7 @@ public class Grid extends Application{
 			case 'u':
 				for(int i = 0; i < length; i++, y--)
 				{
-					if(y == 0 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y+1).get(x)))
+					if(y <= 0 )//&& highway.get(highway.size()-1).equals(graph.get(1).get(x)))
 					{
 						isEnd = true;
 						break;
@@ -562,7 +562,7 @@ public class Grid extends Application{
 			case 'd':
 				for(int i = 0; i < length; i++, y++)
 				{
-					if(y == graph.size()-1 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y-1).get(x)))
+					if(y >= graph.size()-1 )//&& highway.get(highway.size()-1).equals(graph.get(graph.size()-2).get(x)))
 					{
 						isEnd = true;
 						break;
@@ -580,7 +580,7 @@ public class Grid extends Application{
 			case 'l':
 				for(int i = 0; i < length; i++, x--)
 				{
-					if(x == 0 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y).get(x+1)))
+					if(x <= 0 )//&& highway.get(highway.size()-1).equals(graph.get(y).get(1)))
 					{
 						isEnd = true;
 						break;
@@ -598,7 +598,7 @@ public class Grid extends Application{
 			case 'r':
 				for(int i = 0; i < length; i++, x++)
 				{
-					if(x == graph.get(y).size()-1 && i > 0 && highway.get(highway.size()-1).equals(graph.get(y).get(x-1)))
+					if(x >= graph.get(y).size()-1 )//&& highway.get(highway.size()-1).equals(graph.get(y).get(graph.get(y).size()-2)))
 					{
 						isEnd = true;
 						break;
@@ -618,36 +618,53 @@ public class Grid extends Application{
 			}
 			//chooses which direction to go
 			dirchoice = random.nextDouble();  
-			if(dirchoice < .6)
+			if(dirchoice < .3)
 			{
 				//go the same direction
 			}
-			else if(dirchoice < .8)//go counterclockwise
+			else if(dirchoice < .5)//go counterclockwise
 			{
 				switch(direction)
 				{
-				case 'u':direction = 'l';
-				case 'd':direction = 'r';
-				case 'l':direction = 'd';
-				case 'r':direction = 'u';
-				default:return null;
+				case 'u':
+					direction = 'l';
+					break;
+				case 'd':
+					direction = 'r';
+					break;
+				case 'l':
+					direction = 'd';
+					break;
+				case 'r':
+					direction = 'u';
+					break;
+				default:
+					return null;
 				}
 			}
 			else//go clockwise
 			{
 				switch(direction)
 				{
-				case 'u':direction = 'r';
-				case 'd':direction = 'l';
-				case 'l':direction = 'u';
-				case 'r':direction = 'd';
+				case 'u':
+					direction = 'r';
+					break;
+				case 'd':
+					direction = 'l';
+					break;
+				case 'l':
+					direction = 'u';
+					break;
+				case 'r':
+					direction = 'd';
+					break;
 				default:return null;
 				}
 			}
 		}
 		
 		//checking highway validity
-		if(highway.size()<100)
+		if(isEnd && highway.size()<100)
 		{
 			return null;
 		}
