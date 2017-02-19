@@ -1,4 +1,5 @@
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -9,19 +10,19 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.util.Random;
-import java.util.function.BiFunction;
+import java.util.Scanner;
 import java.util.function.ToDoubleBiFunction;
-
 import java.io.File;
-//needed for exporting file
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+//needed for exporting file
 import java.util.ArrayList;
-import java.util.List;
 import java.util.PriorityQueue;
 
 public class Grid extends Application{
@@ -47,11 +48,24 @@ public class Grid extends Application{
 			return (node.type == '1'|| node.type == '2'|| node.type == 'a'|| node.type == 'b')?true:false;
 		}
 		
-		//uses manhattan distance to generate heuristic
-		//TODO: change to manhattan
-		public static double getHeuristic(Node start, Node end)
+		//uses Manhattan distance to generate heuristic
+		//TODO: change to Manhattan
+		public static double euclidDist(Node start, Node end)
 		{
 			return Math.sqrt(((double)Math.pow(start.y-end.y,2))+Math.pow(start.x-end.x, 2))/4;
+		}
+		/**
+		 * gets a distance based on a start and end node, and returns the minimum possible distance
+		 * @param start
+		 * @param end
+		 * @return
+		 */
+		public static double manhattanDist(Node start, Node end)
+		{
+			int xdist = Math.abs(start.x-end.x);
+			int ydist = Math.abs(start.y-end.y);
+			
+			return (xdist+ydist)/4 + ((.25-8) * Math.min(xdist, ydist));
 		}
 		private static boolean isnDiagonal(Node start, Node end)
 		{
@@ -148,12 +162,12 @@ public class Grid extends Application{
 		
 		/*
 			This Method uses A* to traverse the grid from the start to end. 
-			@param grid An arraylist of Cells that will be traversed.
+			@param grid An ArrayList of Cells that will be traversed.
 			@param start The start of the traversal.
 			@param end The end Cell needed to traverse to.
 			@see Cell
 		*/
-		public static ArrayList<Node> astar(Node start, Node end, ToDoubleBiFunction<Node, Node> heuristicFunction )
+		public static ArrayList<Node> astar(Node start, Node end, ToDoubleBiFunction<Node, Node> heuristic )
 		{
 			if(start.equals(end))
 			{
@@ -169,9 +183,11 @@ public class Grid extends Application{
 			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
 			ArrayList<Node> visited = new ArrayList<Node>();
 			fringe.add(ptr);
+			int num = 1;
 			while(!fringe.isEmpty())
 			{
 				ptr = fringe.poll();
+				num++;
 				if(ptr.equals(end))
 				{
 					ArrayList<Node> res = new ArrayList<Node>();
@@ -180,6 +196,7 @@ public class Grid extends Application{
 						res.add(ptr);
 					}
 					res.add(ptr);
+					System.out.println(num);
 					return res;
 				}
 				visited.add(ptr);
@@ -188,16 +205,17 @@ public class Grid extends Application{
 					fptr = ptr.neighbors.get(i);//current neighbor of graph
 					if(isTraversable(fptr)&&!visited.contains(fptr))
 					{
-						if(!fringe.contains(fptr))//add to the fringe and set inf
+						if(!fringe.contains(fptr))//add to the fringe and set to infinity
 						{
 							//May require an if valid node check
 							fptr.distance = Double.POSITIVE_INFINITY;
 							fringe.add(fptr);
 						}
-						updateNode(fringe, ptr, fptr, end, (a, b)->getHeuristic(a, b));
+						updateNode(fringe, ptr, fptr, end, (Node a, Node b)->heuristic.applyAsDouble(a, b));
 					}
 				}
 			}
+			System.out.println(num);
 			return null;
 			//return path
 			
@@ -209,7 +227,7 @@ public class Grid extends Application{
 	{
 		primaryStage.setTitle("Grid");
 		
-		double cellSize = 10;
+		double cellSize = 12;
 		int row = 120;
 		int col = 160;
 		Canvas grid = new Canvas(cellSize*col+col, cellSize*row+row);
@@ -217,11 +235,11 @@ public class Grid extends Application{
 		
 		ScrollPane spane = new ScrollPane();
 		Scene scene = new Scene(gridPane, 800, 600);
+		GraphicsContext gContext = grid.getGraphicsContext2D();
 		
 		spane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		spane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		
-		GraphicsContext gContext = grid.getGraphicsContext2D();
 		//pixel size of cell
 
 		gridPane.add(spane, 0, 0);
@@ -229,29 +247,38 @@ public class Grid extends Application{
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		
+		gridPane.setHgap(5);
+		gridPane.setPadding(new Insets(10,10,10,10));
+		
 		Grid world = new Grid();
 		world.createGrid(120, 160);
 		
-		
 		//text fields
-		TextField xStart = new TextField("xStart");
-		TextField yStart = new TextField("yStart");
-		TextField xEnd = new TextField("xEnd");
-		TextField yEnd = new TextField("yEnd");
+		TextField xStart = new TextField("xStart"),
+				yStart = new TextField("yStart"),
+				xEnd = new TextField("xEnd"),
+				yEnd = new TextField("yEnd");
 		
 		//Buttons
-		Button randomize = new Button("Randomize"), reset = new Button("Reset"), searchPath = new Button("Search");
+		Button randomize = new Button("Randomize"),
+				//reset = new Button("Reset"),
+				euclideanSearchPath = new Button("Euclidean Search"),
+				manhattanSearchPath = new Button("Manhattan Search"),
+				importFile = new Button("Import Map"),
+				exportFile = new Button("Export Map");
+		
+		//Button actions 
 		randomize.setOnAction((e)->
 		{
-			world.createGrid(120,160);
+			world.createGrid(120, 160);
 			world.drawBoard(gContext, world.Grid, cellSize, row, col);
 			drawPath(gContext,
 					search.astar(world.Grid.get(0).get(0),
 							world.Grid.get(119).get(159),
-							(Node a, Node b)->{return search.getHeuristic(a, b);}),
+							(Node a, Node b)->{return search.euclidDist(a, b);}),
 					cellSize);
 		});
-		searchPath.setOnAction((e)->
+		euclideanSearchPath.setOnAction((e)->
 		{
 			int xS = 0, yS = 0, xE = 0, yE = 0;
 			world.drawBoard(gContext, world.Grid, cellSize, row, col);
@@ -265,23 +292,89 @@ public class Grid extends Application{
 				drawPath(gContext,
 						search.astar(world.Grid.get(yS).get(xS),
 								world.Grid.get(yE).get(xE),
-								(Node a, Node b)->{return search.getHeuristic(a, b);}),
+								(Node a, Node b)->{return search.euclidDist(a, b);}),
 						cellSize);
 			}
 			
 		});
-		
+		manhattanSearchPath.setOnAction((e)->
+		{
+			int xS = 0, yS = 0, xE = 0, yE = 0;
+			world.drawBoard(gContext, world.Grid, cellSize, row, col);
+			xS = Integer.parseInt(xStart.getText());
+			yS = Integer.parseInt(yStart.getText());
+			xE = Integer.parseInt(xEnd.getText());
+			yE = Integer.parseInt(yEnd.getText());
+			
+			if(search.isInBounds(world.Grid, xS, yS)&&search.isInBounds(world.Grid, xE, yE))
+			{
+				drawPath(gContext,
+						search.astar(world.Grid.get(yS).get(xS),
+								world.Grid.get(yE).get(xE),
+								(Node a, Node b)->{return search.manhattanDist(a, b);}),
+						cellSize);
+			}
+			
+		}
+		);
+		importFile.setOnAction(e ->
+		{
+			FileChooser fc = new FileChooser();
+			fc.setTitle("Import File");
+			File file = fc.showOpenDialog(primaryStage);
+			if(file!=null)
+			{
+				world.createGrid(file);
+				world.drawBoard(gContext, world.Grid, cellSize, row, col);
+				drawPath(gContext,
+						search.astar(world.Grid.get(0).get(0),
+								world.Grid.get(119).get(159),
+								(Node a, Node b)->{return search.euclidDist(a, b);}),
+						cellSize);
+			}
+		}
+		);
+		exportFile.setOnAction(e ->
+		{
+			FileChooser fc = new FileChooser();
+			fc.setTitle("Import File");
+			FileWriter file;
+			try {
+				file = new FileWriter(fc.showSaveDialog(primaryStage));
+				
+				if(file != null)
+				{
+					for(int y = 0; y<world.Grid.size(); y++)
+					{
+						for(int x = 0; x<world.Grid.get(y).size(); x++)
+						{
+							file.write(world.Grid.get(y).get(x).type);
+						}
+						file.write('\n');
+						file.flush();
+					}
+				}
+				file.close();
+			}
+			catch (IOException e1)
+			{
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				return;
+			}
+			
+		}
+		);
 		//stacking layouts
-		VBox panel = new VBox(randomize, searchPath, xStart, yStart, xEnd, yEnd);
+		VBox panel = new VBox(randomize, importFile, exportFile, euclideanSearchPath, manhattanSearchPath, xStart, yStart, xEnd, yEnd);
 		gridPane.add(panel, 1, 0);
-		
-		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b)->{return search.getHeuristic(a, b);});
+		panel.setMinSize(100, 100);
+		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b)->{return search.euclidDist(a, b);});
 		drawBoard(gContext, world.Grid, cellSize, row, col);
 		drawPath(gContext, path, cellSize);
 		
-
-		
-}
+		System.out.println("Memory Usage: " + (double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000 + " MB");
+	}
 
 	
 	public void setNeighbors(ArrayList<ArrayList<Node>> grid, Node cell){
@@ -430,7 +523,7 @@ public class Grid extends Application{
 	{
 		Node ptr = null, neighbor = null;
 		grid.setStroke(Color.MAROON);
-		grid.setLineWidth(3);
+		grid.setLineWidth(7);
 		for(int y = 0; y < graph.size(); y++)
 		{
 			for(int x = 0; x < graph.get(y).size(); x++)//for every node in the graph
@@ -489,7 +582,6 @@ public class Grid extends Application{
 		boolean isEnd = false;
 		Random random = new Random();
 		ArrayList<Node> highway = new ArrayList<Node>();
-		
 		//pick direction from start
 		if(x == 0)
 		{
@@ -544,12 +636,12 @@ public class Grid extends Application{
 			case 'u':
 				for(int i = 0; i < length; i++, y--)
 				{
-					if(y <= 0 )//&& highway.get(highway.size()-1).equals(graph.get(1).get(x)))
+					if(y <= 0)//&& highway.get(highway.size()-1).equals(graph.get(1).get(x)))
 					{
 						isEnd = true;
 						break;
 					}
-					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b' && !highway.contains(graph.get(y).get(x)))
 					{
 						highway.add(graph.get(y).get(x));
 					}
@@ -562,12 +654,12 @@ public class Grid extends Application{
 			case 'd':
 				for(int i = 0; i < length; i++, y++)
 				{
-					if(y >= graph.size()-1 )//&& highway.get(highway.size()-1).equals(graph.get(graph.size()-2).get(x)))
+					if(y >= graph.size()-1)//&& highway.get(highway.size()-1).equals(graph.get(graph.size()-2).get(x)))
 					{
 						isEnd = true;
 						break;
 					}
-					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b' && !highway.contains(graph.get(y).get(x)))
 					{
 						highway.add(graph.get(y).get(x));
 					}
@@ -580,12 +672,12 @@ public class Grid extends Application{
 			case 'l':
 				for(int i = 0; i < length; i++, x--)
 				{
-					if(x <= 0 )//&& highway.get(highway.size()-1).equals(graph.get(y).get(1)))
+					if(x <= 0)//&& highway.get(highway.size()-1).equals(graph.get(y).get(1)))
 					{
 						isEnd = true;
 						break;
 					}
-					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b' && !highway.contains(graph.get(y).get(x)))
 					{
 						highway.add(graph.get(y).get(x));
 					}
@@ -598,12 +690,12 @@ public class Grid extends Application{
 			case 'r':
 				for(int i = 0; i < length; i++, x++)
 				{
-					if(x >= graph.get(y).size()-1 )//&& highway.get(highway.size()-1).equals(graph.get(y).get(graph.get(y).size()-2)))
+					if(x >= graph.get(y).size()-1)//&& highway.get(highway.size()-1).equals(graph.get(y).get(graph.get(y).size()-2)))
 					{
 						isEnd = true;
 						break;
 					}
-					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b')
+					if(graph.get(y).get(x).type != 'a' && graph.get(y).get(x).type != 'b' && !highway.contains(graph.get(y).get(x)))
 					{
 						highway.add(graph.get(y).get(x));
 					}
@@ -618,11 +710,11 @@ public class Grid extends Application{
 			}
 			//chooses which direction to go
 			dirchoice = random.nextDouble();  
-			if(dirchoice < .3)
+			if(dirchoice < .6)
 			{
 				//go the same direction
 			}
-			else if(dirchoice < .5)//go counterclockwise
+			else if(dirchoice < .8)//go counterclockwise
 			{
 				switch(direction)
 				{
@@ -719,7 +811,7 @@ public class Grid extends Application{
 				i++;
 				for(Node e : highway)
 				{
-					e.type = (e.type  =='1')? 'a' : 'b';
+					e.type = (e.type  =='1' || e.type  =='a' )? 'a' : 'b';
 				}
 			}
 		}
@@ -785,7 +877,41 @@ public class Grid extends Application{
 		fillBlockedCells(this.Grid, (int)Math.round(this.Grid.size()*this.Grid.get(0).size()*.2));
 		return this.Grid;
 	}
-
+	public ArrayList<ArrayList<Node>> createGrid(File file)
+	{
+		//creates all unblocked cells
+		this.Grid = new ArrayList<ArrayList<Node>>();
+		Scanner scan;
+		try
+		{
+			scan = new Scanner(file);
+			String tmp;
+			for (int row=0; scan.hasNext(); row++)
+			{
+				this.Grid.add(new ArrayList<Node>());
+				tmp = scan.nextLine();
+				for (int col=0; col < tmp.length(); col++)
+				{
+					this.Grid.get(row).add(new Node(tmp.charAt(col), col, row));
+				}
+			}
+			scan.close();
+			//set neighbors
+			for (int row=0; row<this.Grid.size(); row++)
+			{		
+				for (int col=0; col<this.Grid.get(row).size(); col++)
+				{
+					setNeighbors(this.Grid, this.Grid.get(row).get(col));
+				}
+			}
+			return this.Grid;
+		}
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
 
     public static void main(String[] args)
     {
