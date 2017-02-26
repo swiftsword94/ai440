@@ -4,9 +4,12 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -16,13 +19,14 @@ import javafx.stage.Stage;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.function.ToDoubleBiFunction;
+
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 //needed for exporting file
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.PriorityQueue;
 
 public class Grid extends Application{
@@ -47,25 +51,33 @@ public class Grid extends Application{
 		{
 			return (node.type == '1'|| node.type == '2'|| node.type == 'a'|| node.type == 'b')?true:false;
 		}
-		
-		//uses Manhattan distance to generate heuristic
-		//TODO: change to Manhattan
 		public static double euclidDist(Node start, Node end)
 		{
 			return Math.sqrt(((double)Math.pow(start.y-end.y,2))+Math.pow(start.x-end.x, 2))/4;
+		}
+		public static double squareManhattanDist(Node start, Node end)
+		{
+			return Math.pow(Math.abs((double)start.x - end.x), 2) + Math.pow(Math.abs((double)start.y - end.y), 2);
+		}
+		public static double randomDist(Node start, Node end)
+		{
+			return Math.random();
+		}
+		public static double aDist(Node start, Node end)
+		{
+			return (start.x+end.x);
 		}
 		/**
 		 * gets a distance based on a start and end node, and returns the minimum possible distance
 		 * @param start
 		 * @param end
-		 * @return
+		 * @return an estimated distance based on 
 		 */
 		public static double manhattanDist(Node start, Node end)
 		{
 			int xdist = Math.abs(start.x-end.x);
 			int ydist = Math.abs(start.y-end.y);
-			
-			return (xdist+ydist)/4 + ((.25-8) * Math.min(xdist, ydist));
+			return (xdist+ydist)/4 + ((.25-4) * Math.min(xdist, ydist));
 		}
 		private static boolean isnDiagonal(Node start, Node end)
 		{
@@ -157,9 +169,26 @@ public class Grid extends Application{
 			}
 			return false;
 		}
-		
-		
-		
+		private static boolean updateNode(PriorityQueue<Node> fringe, Node current, Node fptr, Node end, Heuristic<Node, Node, Double> heuristic)
+		{
+			if(current.distance + getCost(current, fptr) < fptr.distance)
+			{
+				double estimatedDistance = 0;
+				fptr.distance = current.distance + getCost(current, fptr);
+				if(heuristic!=null)
+				{
+					estimatedDistance = heuristic.apply(fptr, end, new Double(1));
+				}
+				fptr.eCost = fptr.distance+estimatedDistance;
+				fptr.parent = current;
+				if(fringe.contains(fptr))
+				{
+					fringe.remove(fptr);
+				}
+				fringe.add(fptr);
+			}
+			return false;
+		}
 		/*
 			This Method uses A* to traverse the grid from the start to end. 
 			@param grid An ArrayList of Cells that will be traversed.
@@ -167,7 +196,7 @@ public class Grid extends Application{
 			@param end The end Cell needed to traverse to.
 			@see Cell
 		*/
-		public static ArrayList<Node> astar(Node start, Node end, ToDoubleBiFunction<Node, Node> heuristic )
+		public static ArrayList<Node> astar(Node start, Node end, ToDoubleBiFunction<Node, Node> heuristic)
 		{
 			if(start.equals(end))
 			{
@@ -179,7 +208,6 @@ public class Grid extends Application{
 			}
 			Node ptr = start, fptr;//current and fringe pointer nodes
 			ptr.parent=ptr;
-			//TODO: comparator for fringe?
 			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
 			ArrayList<Node> visited = new ArrayList<Node>();
 			fringe.add(ptr);
@@ -218,9 +246,197 @@ public class Grid extends Application{
 			System.out.println(num);
 			return null;
 			//return path
+		}
+		
+		public static ArrayList<Node> astar(Node start, Node end, Heuristic<Node, Node, Double> heuristic)
+		{
+			if(start.equals(end))
+			{
+				return null;
+			}
+			if(!isTraversable(start))
+			{
+				return null;
+			}
+			Node ptr = start, fptr;//current and fringe pointer nodes
+			ptr.parent=ptr;
+			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
+			ArrayList<Node> visited = new ArrayList<Node>();
+			fringe.add(ptr);
+			int num = 1;
+			while(!fringe.isEmpty())
+			{
+				ptr = fringe.poll();
+				num++;
+				if(ptr.equals(end))
+				{
+					ArrayList<Node> res = new ArrayList<Node>();
+					for(;ptr!=start; ptr = ptr.parent)//return the path back to start
+					{
+						res.add(ptr);
+					}
+					res.add(ptr);
+					System.out.println(num);
+					return res;
+				}
+				visited.add(ptr);
+				for(int i = 0; i<ptr.neighbors.size();i++)//getting neighbors from current node
+				{
+					fptr = ptr.neighbors.get(i);//current neighbor of graph
+					if(isTraversable(fptr)&&!visited.contains(fptr))
+					{
+						if(!fringe.contains(fptr))//add to the fringe and set to infinity
+						{
+							fptr.distance = Double.POSITIVE_INFINITY;
+							fringe.add(fptr);
+						}
+						updateNode(fringe, ptr, fptr, end, (Node a, Node b, Double c) -> heuristic.apply(a, b, c));
+					}
+				}
+			}
+			System.out.println(num);
+			return null;
+			//return path
 			
 		}
+		public static void expandState(PriorityQueue<Node> fringe, HashSet<Node> closed, Node current, Node end, Heuristic<Node, Node, Double> heuristic, Double weight)
+		{
+			Node ptr = current, insert = null;
+			boolean inFringe = false;
+			fringe.remove(ptr);
+			for(Node neighbor : ptr.neighbors)
+			{
+				//check to see if s' already in fringe
+				for(Node indexed : fringe)
+				{
+					if(neighbor.x == indexed.x && neighbor.y == indexed.y)//the fringe is limited to only one search in this fringe
+					{
+						inFringe = true;
+						insert = indexed;
+						break;
+					}
+				}
+				//if not in fringe, make a new node to put in the fringe
+				if(!inFringe)
+				{
+					insert = new Node(neighbor);
+					for(Node neigh : fringe)
+					{
+						if((Math.abs(neigh.x - insert.x) == 1||Math.abs(neigh.y - insert.y) == 1))
+						{
+							insert.neighbors.add(neigh);
+							neigh.neighbors.add(insert);
+						}
+					}
+					insert.distance = Double.POSITIVE_INFINITY;
+					insert.parent = null;
+				}
+				
+				if(insert.distance > ptr.distance + getCost(ptr, insert))
+				{
+					insert.distance = ptr.distance + getCost(ptr, insert);
+					insert.parent = ptr;
+					if(!closed.contains(insert))//probably error prone
+					{
+						insert.eCost = insert.distance + heuristic.apply(insert, end, weight);
+						//if insert is not the same as neighbor then a new node must have been created
+						if(inFringe)
+						{
+							fringe.remove(insert);
+							fringe.add(insert);
+						}
+						else
+						{
+							fringe.add(insert);
+						}
+					}
+				}
+			}
+		}
+		public static ArrayList<Node> sequentialAStar(ArrayList<ArrayList<Node>> graph, Node start, Node end, Heuristic<Node, Node, Double>[] heuristic, Double weight1, Double weight2)
+		{
+			ArrayList<PriorityQueue<Node>> fringe = new ArrayList<PriorityQueue<Node>>();
+			ArrayList<HashSet<Node>> closed = new ArrayList<HashSet<Node>>();
+			ArrayList<Node> endNode = new ArrayList<Node>(); 
+			//for all nodes in the graph
+			Node tmp = null;
+			for(int i = 0; i < heuristic.length; i++)
+			{
+				//initialize PriorityQueue for subsequent searches
+				fringe.add(new PriorityQueue<Node>());
+				closed.add(new HashSet<Node>());
+				//start node
+				tmp = new Node(start.type, start.x, start.y, 0.0, 0.0, null);
+				tmp.neighbors = new ArrayList<Node>(start.neighbors);
+				tmp.eCost = tmp.distance + heuristic[i].apply(tmp, end, weight1);
+				//add start node into corresponding PriorityQueue
+				fringe.get(i).add(tmp);
+				//end node
+				tmp = new Node(end.type, end.x, end.y, Double.POSITIVE_INFINITY, 0.0, null);
+				tmp.neighbors = new ArrayList<Node>(end.neighbors);
+				//add end node into corresponding PriorityQueue
+				endNode.add(tmp);
+			}
+			//while the anchor search's fringe < infinity
+			while(fringe.get(0).peek().eCost < Double.POSITIVE_INFINITY)
+			{
+				//for all the non admissible searches
+				for(int i = 1; i < heuristic.length; i++)
+				{
+					if(fringe.get(i).peek().eCost <= weight2 * fringe.get(0).peek().eCost)
+					{
+						if(endNode.get(i).distance <= fringe.get(i).peek().eCost)
+						{
+							if(endNode.get(i).distance < Double.POSITIVE_INFINITY)
+							{
+								//return the path back to start
+								ArrayList<Node> res = new ArrayList<Node>();
+								Node ptr = endNode.get(i);
+								for(; ptr != start; ptr = ptr.parent)
+								{
+									res.add(ptr);
+								}
+								res.add(ptr);
+								return res;
+							}
+						}
+						else
+						{
+							Node ptr = fringe.get(i).peek();
+							expandState(fringe.get(i), closed.get(i), ptr, endNode.get(i), heuristic[i], weight1);
+							closed.get(i).add(ptr);
+						}
+					}
+					else
+					{
+						if(endNode.get(0).distance <= fringe.get(0).peek().eCost)
+						{
+							if(endNode.get(0).distance < Double.POSITIVE_INFINITY)
+							{
+								//return the path back to start
+								ArrayList<Node> res = new ArrayList<Node>();
+								Node ptr = endNode.get(0);
+								for(; ptr != start; ptr = ptr.parent)
+								{
+									res.add(ptr);
+								}
+								res.add(ptr);
+								return res;
+							}
+						}
+						else
+						{
+							Node ptr = fringe.get(0).peek();
+							expandState(fringe.get(0), closed.get(0), ptr, endNode.get(0), heuristic[0], weight1);
+							closed.get(0).add(ptr);
+						}
+					}
+				}
+			}
+			return null;
+		}
 	}
+	
 	
 
 	public void start(Stage primaryStage) throws Exception
@@ -257,16 +473,37 @@ public class Grid extends Application{
 		TextField xStart = new TextField("xStart"),
 				yStart = new TextField("yStart"),
 				xEnd = new TextField("xEnd"),
-				yEnd = new TextField("yEnd");
+				yEnd = new TextField("yEnd"),
+				weight1 = new TextField("Weight1"),
+				weight2 = new TextField("Weight2");
 		
 		//Buttons
 		Button randomize = new Button("Randomize"),
 				//reset = new Button("Reset"),
-				euclideanSearchPath = new Button("Euclidean Search"),
-				manhattanSearchPath = new Button("Manhattan Search"),
+				searchPath = new Button("Search"),
+				sequentialSearch = new Button("Sequential Search"),
 				importFile = new Button("Import Map"),
 				exportFile = new Button("Export Map");
 		
+		//Togglebuttons
+		ToggleButton tb1 = new ToggleButton("Weighted");
+		
+		//RadioButton
+		RadioButton rb1 = new RadioButton("Euclidean Distance"),
+				rb2 = new RadioButton("Manhattan Distance"),
+				rb3 = new RadioButton("Euclid^2 Distance"),
+				rb4 = new RadioButton("Random Distance"),
+				rb5 = new RadioButton("Other Distance");
+		
+		//ToggleGroup for radio buttons
+		ToggleGroup group = new ToggleGroup();
+		rb1.setToggleGroup(group);
+		rb2.setToggleGroup(group);
+		rb3.setToggleGroup(group);
+		rb4.setToggleGroup(group);
+		rb5.setToggleGroup(group);
+		
+		rb1.setSelected(true);
 		//Button actions 
 		randomize.setOnAction((e)->
 		{
@@ -278,10 +515,13 @@ public class Grid extends Application{
 							(Node a, Node b)->{return search.euclidDist(a, b);}),
 					cellSize);
 		});
-		euclideanSearchPath.setOnAction((e)->
+		searchPath.setOnAction((e)->
 		{
 			int xS = 0, yS = 0, xE = 0, yE = 0;
-			world.drawBoard(gContext, world.Grid, cellSize, row, col);
+			Double heuristicWeight = new Double(1);
+			world.drawBoard(gContext, world.Grid, cellSize, row, col);//redraws background
+			
+			//gets textbox input
 			xS = Integer.parseInt(xStart.getText());
 			yS = Integer.parseInt(yStart.getText());
 			xE = Integer.parseInt(xEnd.getText());
@@ -289,18 +529,52 @@ public class Grid extends Application{
 			
 			if(search.isInBounds(world.Grid, xS, yS)&&search.isInBounds(world.Grid, xE, yE))
 			{
+				//picks heuristic to run based off of radio buttons
+				ToDoubleBiFunction<Node, Node> func = (Node a, Node b)->{return search.euclidDist(a, b);};
+				Heuristic<Node, Node, Double> func2 = null;
+				if(rb1.isSelected())
+				{
+					func = (Node a, Node b)->{return search.euclidDist(a, b);};
+				}
+				else if(rb2.isSelected())
+				{
+					
+				}
+				else if(rb3.isSelected())
+				{
+					
+				}
+				else if(rb4.isSelected())
+				{
+					
+				}
+				else if(rb5.isSelected())
+				{
+					
+				}
+				if(tb1.isSelected())
+				{
+					//modify for added weight
+					heuristicWeight = Double.parseDouble(weight1.getText());
+				}
+				final ToDoubleBiFunction<Node, Node> functmp = func;
+				final Double weightTmp = heuristicWeight;
+				func2 = (Node a, Node b, Double c)->{return functmp.applyAsDouble(a, b) * weightTmp;};
+				//runs A* and draws the path returned using the previously picked heuristic
 				drawPath(gContext,
 						search.astar(world.Grid.get(yS).get(xS),
 								world.Grid.get(yE).get(xE),
-								(Node a, Node b)->{return search.euclidDist(a, b);}),
+								func2),
 						cellSize);
 			}
 			
 		});
-		manhattanSearchPath.setOnAction((e)->
+		sequentialSearch.setOnAction((e)->
 		{
 			int xS = 0, yS = 0, xE = 0, yE = 0;
-			world.drawBoard(gContext, world.Grid, cellSize, row, col);
+			world.drawBoard(gContext, world.Grid, cellSize, row, col);//redraws background
+			
+			//gets textbox input
 			xS = Integer.parseInt(xStart.getText());
 			yS = Integer.parseInt(yStart.getText());
 			xE = Integer.parseInt(xEnd.getText());
@@ -308,15 +582,21 @@ public class Grid extends Application{
 			
 			if(search.isInBounds(world.Grid, xS, yS)&&search.isInBounds(world.Grid, xE, yE))
 			{
+				ToDoubleBiFunction<Node, Node> functmp = (Node a, Node b)->{return search.euclidDist(a, b);};
+				Double weightTmp1 = Double.parseDouble(weight1.getText()), weightTmp2 = Double.parseDouble(weight1.getText());;;
+				
+				
+				@SuppressWarnings("unchecked")
+				Heuristic<Node, Node, Double>[] heuristics = (Heuristic<Node, Node, Double>[])new Heuristic[]{
+						(Object a, Object b, Object c)->{return functmp.applyAsDouble((Node)a, (Node)b) * weightTmp1;},
+						(Object a, Object b, Object c)->{return functmp.applyAsDouble((Node)a, (Node)b) * weightTmp2;}};
+				//runs A* and draws the path returned using the previously picked heuristic
 				drawPath(gContext,
-						search.astar(world.Grid.get(yS).get(xS),
-								world.Grid.get(yE).get(xE),
-								(Node a, Node b)->{return search.manhattanDist(a, b);}),
+						search.sequentialAStar(world.Grid, world.Grid.get(yS).get(xS), world.Grid.get(yE).get(xE), heuristics, 1.0, 1.0),
 						cellSize);
 			}
 			
-		}
-		);
+		});
 		importFile.setOnAction(e ->
 		{
 			FileChooser fc = new FileChooser();
@@ -366,9 +646,10 @@ public class Grid extends Application{
 		}
 		);
 		//stacking layouts
-		VBox panel = new VBox(randomize, importFile, exportFile, euclideanSearchPath, manhattanSearchPath, xStart, yStart, xEnd, yEnd);
+		VBox panel2 = new VBox(rb1, rb2, rb3, rb4, rb5, tb1);
+		VBox panel = new VBox(randomize, importFile, exportFile ,searchPath, xStart, yStart, xEnd, yEnd, weight1, weight2, sequentialSearch, panel2);
 		gridPane.add(panel, 1, 0);
-		panel.setMinSize(100, 100);
+		panel.setMinSize(200, 100);
 		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b)->{return search.euclidDist(a, b);});
 		drawBoard(gContext, world.Grid, cellSize, row, col);
 		drawPath(gContext, path, cellSize);
@@ -493,7 +774,6 @@ public class Grid extends Application{
 	}
 	public void drawCells(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize)
 	{
-		
 		for(int y = 0; y < graph.size(); y++)
 		{
 			for(int x = 0; x < graph.get(y).size(); x++)
@@ -754,13 +1034,11 @@ public class Grid extends Application{
 				}
 			}
 		}
-		
 		//checking highway validity
 		if(isEnd && highway.size()<100)
 		{
 			return null;
 		}
-		
 		return highway;
 	}
 	/**
@@ -870,7 +1148,6 @@ public class Grid extends Application{
 		{
 			addHardCellBlock(this.Grid, (int)Math.round(Math.random()*(width-1)),(int)Math.round(Math.random()*(height-1)), 31);
 		}
-		
 		//DO HIGHWAYS
 		fillHighways(this.Grid, 4);
 		//DO Blocked Cells
@@ -915,42 +1192,6 @@ public class Grid extends Application{
 
     public static void main(String[] args)
     {
-    	
-    	
-    	
     	Application.launch(args);
-        
-        //import
-        /*
-        String file_name = "testGrid.txt";
-        try{
-        	ReadFile file = new ReadFile(file_name);
-        	String[] aryLines = file.OpenFile();
-        	int i;
-        	for (int i = 0; i<aryLines.length; i++){
-        		System.out.println(aryLines[i]);
-        	
-        	}
-        }
-        catch (IOException e){
-        	System.out.println("FILE Was not exported");
-        	
-        }
-        */
-        
-        /*
-        File file = new File("gridPaneTest.txt");
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(file);
-            writer.write("");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (writer != null) try { writer.close(); } catch (IOException ignore) {}
-        }
-        System.out.printf("File is located at %s%n", file.getAbsolutePath());
-        */
-      
     }
 }
