@@ -32,6 +32,7 @@ public class Node implements Comparable<Node>
 		this.x = o.x;
 		this.y = o.y;
 		this.parent = o.parent;
+		this.neighbors = new ArrayList<Node>();
 	}
 	@Override
 	public int compareTo(Node o) {

@@ -57,7 +57,9 @@ public class Grid extends Application{
 		}
 		public static double squareManhattanDist(Node start, Node end)
 		{
-			return Math.pow(Math.abs((double)start.x - end.x), 2) + Math.pow(Math.abs((double)start.y - end.y), 2);
+			int xdist = Math.abs(start.x-end.x);
+			int ydist = Math.abs(start.y-end.y);
+			return Math.pow(((xdist + ydist) + (1.41421356237) * Math.min(xdist, ydist))/4, 2);
 		}
 		public static double randomDist(Node start, Node end)
 		{
@@ -77,7 +79,7 @@ public class Grid extends Application{
 		{
 			int xdist = Math.abs(start.x-end.x);
 			int ydist = Math.abs(start.y-end.y);
-			return (xdist+ydist)/4 + ((.25-4) * Math.min(xdist, ydist));
+			return ((xdist + ydist) + (1.41421356237) * Math.min(xdist, ydist))/4; /*(Math.sqrt(2) is aproximatley 1.41421356237*/
 		}
 		private static boolean isnDiagonal(Node start, Node end)
 		{
@@ -322,6 +324,7 @@ public class Grid extends Application{
 					insert = new Node(neighbor);
 					for(Node neigh : fringe)
 					{
+						
 						if((Math.abs(neigh.x - insert.x) == 1||Math.abs(neigh.y - insert.y) == 1))
 						{
 							insert.neighbors.add(neigh);
@@ -493,7 +496,7 @@ public class Grid extends Application{
 				rb2 = new RadioButton("Manhattan Distance"),
 				rb3 = new RadioButton("Euclid^2 Distance"),
 				rb4 = new RadioButton("Random Distance"),
-				rb5 = new RadioButton("Other Distance");
+				rb5 = new RadioButton("Manhattan^2 Distance");
 		
 		//ToggleGroup for radio buttons
 		ToggleGroup group = new ToggleGroup();
@@ -538,19 +541,19 @@ public class Grid extends Application{
 				}
 				else if(rb2.isSelected())
 				{
-					
+					func = (Node a, Node b)->{return search.manhattanDist(a, b);};
 				}
 				else if(rb3.isSelected())
 				{
-					
+					func = (Node a, Node b)->{return Math.pow(search.euclidDist(a, b), 2);};
 				}
 				else if(rb4.isSelected())
 				{
-					
+					func = (Node a, Node b)->{return search.randomDist(a, b);};
 				}
 				else if(rb5.isSelected())
 				{
-					
+					func = (Node a, Node b)->{return search.squareManhattanDist(a, b);};
 				}
 				if(tb1.isSelected())
 				{
