@@ -79,7 +79,7 @@ public class Grid extends Application{
 		{
 			int xdist = Math.abs(start.x-end.x);
 			int ydist = Math.abs(start.y-end.y);
-			return ((xdist + ydist) + (1.41421356237) * Math.min(xdist, ydist))/4; /*(Math.sqrt(2) is aproximatley 1.41421356237*/
+			return ((xdist + ydist)/4 - (1.41421356237) * Math.min(xdist, ydist)); /*(Math.sqrt(2) is aproximatley 1.41421356237*/
 		}
 		private static boolean isnDiagonal(Node start, Node end)
 		{
@@ -213,11 +213,9 @@ public class Grid extends Application{
 			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
 			ArrayList<Node> visited = new ArrayList<Node>();
 			fringe.add(ptr);
-			int num = 1;
 			while(!fringe.isEmpty())
 			{
 				ptr = fringe.poll();
-				num++;
 				if(ptr.equals(end))
 				{
 					ArrayList<Node> res = new ArrayList<Node>();
@@ -226,7 +224,6 @@ public class Grid extends Application{
 						res.add(ptr);
 					}
 					res.add(ptr);
-					System.out.println(num);
 					return res;
 				}
 				visited.add(ptr);
@@ -245,7 +242,6 @@ public class Grid extends Application{
 					}
 				}
 			}
-			System.out.println(num);
 			return null;
 			//return path
 		}
@@ -265,11 +261,9 @@ public class Grid extends Application{
 			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
 			ArrayList<Node> visited = new ArrayList<Node>();
 			fringe.add(ptr);
-			int num = 1;
 			while(!fringe.isEmpty())
 			{
 				ptr = fringe.poll();
-				num++;
 				if(ptr.equals(end))
 				{
 					ArrayList<Node> res = new ArrayList<Node>();
@@ -278,7 +272,6 @@ public class Grid extends Application{
 						res.add(ptr);
 					}
 					res.add(ptr);
-					System.out.println(num);
 					return res;
 				}
 				visited.add(ptr);
@@ -296,7 +289,6 @@ public class Grid extends Application{
 					}
 				}
 			}
-			System.out.println(num);
 			return null;
 			//return path
 			
@@ -304,22 +296,38 @@ public class Grid extends Application{
 		public static void expandState(PriorityQueue<Node> fringe, HashSet<Node> closed, Node current, Node end, Heuristic<Node, Node, Double> heuristic, Double weight)
 		{
 			Node ptr = current, insert = null;
-			boolean inFringe = false;
+			boolean inFringe;
 			fringe.remove(ptr);
+			//System.out.println("Current Node: " + current.x +", " + current.y);
 			for(Node neighbor : ptr.neighbors)
 			{
+				if(search.isTraversable(neighbor))
+				{
+					continue;
+				}
+				inFringe = false;
+				//System.out.print("Node inspected: " + neighbor.x + ", " + neighbor.y + ",  ");
 				//check to see if s' already in fringe
 				for(Node indexed : fringe)
 				{
-					if(neighbor.x == indexed.x && neighbor.y == indexed.y)//the fringe is limited to only one search in this fringe
+					if(neighbor.x == indexed.x && neighbor.y == indexed.y)//the fringe is limited to only one copy of each node in the graph
 					{
 						inFringe = true;
 						insert = indexed;
 						break;
 					}
 				}
+				//System.out.print("inFringe: " + inFringe + ", ");
 				//if not in fringe, make a new node to put in the fringe
-				if(!inFringe)
+				for(Node indexed : closed)
+				{
+					if(neighbor.x == indexed.x && neighbor.y == indexed.y)//the fringe is limited to only one copy of each node in the graph
+					{
+						insert = indexed;
+						break;
+					}
+				}
+				if(!inFringe && !closed.contains(insert))
 				{
 					insert = new Node(neighbor);
 					for(Node neigh : fringe)
@@ -334,7 +342,8 @@ public class Grid extends Application{
 					insert.distance = Double.POSITIVE_INFINITY;
 					insert.parent = null;
 				}
-				
+				//check to see if you can get from ptr to insert faster than insert's parent to insert
+				//System.out.println(" previous distance: "+insert.distance+ " vs proposed distance: "+ (ptr.distance + getCost(ptr, insert)));
 				if(insert.distance > ptr.distance + getCost(ptr, insert))
 				{
 					insert.distance = ptr.distance + getCost(ptr, insert);
@@ -342,7 +351,7 @@ public class Grid extends Application{
 					if(!closed.contains(insert))//probably error prone
 					{
 						insert.eCost = insert.distance + heuristic.apply(insert, end, weight);
-						//if insert is not the same as neighbor then a new node must have been created
+						//if insert is in the fringe then remove and insert to avoid duplicates
 						if(inFringe)
 						{
 							fringe.remove(insert);
@@ -386,6 +395,9 @@ public class Grid extends Application{
 				//for all the non admissible searches
 				for(int i = 1; i < heuristic.length; i++)
 				{
+					System.out.println("\n\nInadmissible current Node: (" + fringe.get(i).peek().x + ", " + fringe.get(i).peek().y + "), Fringe size: " + fringe.get(i).size() + ", Closed size: " + closed.get(i).size());
+					System.out.println("Admissible current Node: (" + fringe.get(0).peek().x + ", " + fringe.get(0).peek().y + "), Fringe size: " + fringe.get(0).size() + ", Closed size: " + closed.get(0).size());
+					System.out.println("Fringe "+i+ ": "+fringe.get(i).peek().eCost+"Fringe "+0+ ": "+fringe.get(0).peek().eCost);
 					if(fringe.get(i).peek().eCost <= weight2 * fringe.get(0).peek().eCost)
 					{
 						if(endNode.get(i).distance <= fringe.get(i).peek().eCost)
@@ -405,7 +417,9 @@ public class Grid extends Application{
 						}
 						else
 						{
+							//i want to pass nodes that have neighbors but am not entirely sure how to do so
 							Node ptr = fringe.get(i).peek();
+							//System.out.println("Heuristic " + i + " choosing (" + ptr.x + ", " + ptr.y + ')');
 							expandState(fringe.get(i), closed.get(i), ptr, endNode.get(i), heuristic[i], weight1);
 							closed.get(i).add(ptr);
 						}
@@ -430,6 +444,7 @@ public class Grid extends Application{
 						else
 						{
 							Node ptr = fringe.get(0).peek();
+							//System.out.println("Heuristic " + 0 + " choosing (" + ptr.x + ", " + ptr.y + ')');
 							expandState(fringe.get(0), closed.get(0), ptr, endNode.get(0), heuristic[0], weight1);
 							closed.get(0).add(ptr);
 						}
@@ -446,7 +461,7 @@ public class Grid extends Application{
 	{
 		primaryStage.setTitle("Grid");
 		
-		double cellSize = 12;
+		double cellSize = 7;
 		int row = 120;
 		int col = 160;
 		Canvas grid = new Canvas(cellSize*col+col, cellSize*row+row);
@@ -711,7 +726,7 @@ public class Grid extends Application{
 	public void drawBoard(GraphicsContext grid, ArrayList<ArrayList<Node>> graph, double cellSize, int row, int col)
 	{
 		grid.setFill(Color.WHITE);
-		grid.fill();
+		grid.fillRect(0, 0, cellSize*col+col, cellSize*row+row);
     	makeCellBorders(grid, cellSize+1);
     	drawCells(grid, graph, cellSize);
     	drawHighways(grid, graph, cellSize);
@@ -790,7 +805,7 @@ public class Grid extends Application{
 	{
 		Node ptr = null, neighbor = null;
 		grid.setStroke(Color.BLUEVIOLET);
-		grid.setLineWidth(3);
+		grid.setLineWidth(cellSize/2-2);
 		if(path==null)
 		{
 			return ;
@@ -806,7 +821,7 @@ public class Grid extends Application{
 	{
 		Node ptr = null, neighbor = null;
 		grid.setStroke(Color.MAROON);
-		grid.setLineWidth(7);
+		grid.setLineWidth(cellSize/2);
 		for(int y = 0; y < graph.size(); y++)
 		{
 			for(int x = 0; x < graph.get(y).size(); x++)//for every node in the graph
