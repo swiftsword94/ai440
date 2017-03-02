@@ -301,11 +301,12 @@ public class Grid extends Application{
 			//System.out.println("Current Node: " + current.x +", " + current.y);
 			for(Node neighbor : ptr.neighbors)
 			{
-				if(search.isTraversable(neighbor))
+				if(!search.isTraversable(neighbor))
 				{
 					continue;
 				}
 				inFringe = false;
+				insert = neighbor;
 				//System.out.print("Node inspected: " + neighbor.x + ", " + neighbor.y + ",  ");
 				//check to see if s' already in fringe
 				for(Node indexed : fringe)
@@ -327,13 +328,13 @@ public class Grid extends Application{
 						break;
 					}
 				}
-				if(!inFringe && !closed.contains(insert))
+				if(!inFringe && !closed.contains(insert) && (insert.x != end.x && insert.y != end.y))//if its neither the end node nor closed nor insert 
 				{
 					insert = new Node(neighbor);
 					for(Node neigh : fringe)
 					{
 						
-						if((Math.abs(neigh.x - insert.x) == 1||Math.abs(neigh.y - insert.y) == 1))
+						if(Math.abs(neigh.x - insert.x) <= 1 && Math.abs(neigh.y - insert.y) <= 1 && (neigh.y-insert.y != 0 && neigh.x-insert.x != 0))
 						{
 							insert.neighbors.add(neigh);
 							neigh.neighbors.add(insert);
@@ -341,6 +342,10 @@ public class Grid extends Application{
 					}
 					insert.distance = Double.POSITIVE_INFINITY;
 					insert.parent = null;
+				}
+				else if(insert.x == end.x && insert.y == end.y)
+				{
+					insert = end;
 				}
 				//check to see if you can get from ptr to insert faster than insert's parent to insert
 				//System.out.println(" previous distance: "+insert.distance+ " vs proposed distance: "+ (ptr.distance + getCost(ptr, insert)));
@@ -397,7 +402,7 @@ public class Grid extends Application{
 				{
 					System.out.println("\n\nInadmissible current Node: (" + fringe.get(i).peek().x + ", " + fringe.get(i).peek().y + "), Fringe size: " + fringe.get(i).size() + ", Closed size: " + closed.get(i).size());
 					System.out.println("Admissible current Node: (" + fringe.get(0).peek().x + ", " + fringe.get(0).peek().y + "), Fringe size: " + fringe.get(0).size() + ", Closed size: " + closed.get(0).size());
-					System.out.println("Fringe "+i+ ": "+fringe.get(i).peek().eCost+"Fringe "+0+ ": "+fringe.get(0).peek().eCost);
+					System.out.println("Fringe "+i+ ": "+fringe.get(i).peek().eCost+" Fringe "+0+ ": "+fringe.get(0).peek().eCost);
 					if(fringe.get(i).peek().eCost <= weight2 * fringe.get(0).peek().eCost)
 					{
 						if(endNode.get(i).distance <= fringe.get(i).peek().eCost)
@@ -407,8 +412,9 @@ public class Grid extends Application{
 								//return the path back to start
 								ArrayList<Node> res = new ArrayList<Node>();
 								Node ptr = endNode.get(i);
-								for(; ptr != start; ptr = ptr.parent)
+								for(; !start.equals(ptr); ptr = ptr.parent)//checking wrong start object
 								{
+									System.out.println("Pathed Node: " + ptr.x + ", " + ptr.y);
 									res.add(ptr);
 								}
 								res.add(ptr);
