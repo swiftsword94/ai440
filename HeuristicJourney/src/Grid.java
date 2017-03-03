@@ -261,9 +261,11 @@ public class Grid extends Application{
 			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
 			ArrayList<Node> visited = new ArrayList<Node>();
 			fringe.add(ptr);
+			int num = 0;
 			while(!fringe.isEmpty())
 			{
 				ptr = fringe.poll();
+				num++;
 				if(ptr.equals(end))
 				{
 					ArrayList<Node> res = new ArrayList<Node>();
@@ -271,6 +273,7 @@ public class Grid extends Application{
 					{
 						res.add(ptr);
 					}
+					System.out.println(++num);
 					res.add(ptr);
 					return res;
 				}
@@ -400,9 +403,9 @@ public class Grid extends Application{
 				//for all the non admissible searches
 				for(int i = 1; i < heuristic.length; i++)
 				{
-					System.out.println("\n\nInadmissible current Node: (" + fringe.get(i).peek().x + ", " + fringe.get(i).peek().y + "), Fringe size: " + fringe.get(i).size() + ", Closed size: " + closed.get(i).size());
-					System.out.println("Admissible current Node: (" + fringe.get(0).peek().x + ", " + fringe.get(0).peek().y + "), Fringe size: " + fringe.get(0).size() + ", Closed size: " + closed.get(0).size());
-					System.out.println("Fringe "+i+ ": "+fringe.get(i).peek().eCost+" Fringe "+0+ ": "+fringe.get(0).peek().eCost);
+					//System.out.println("\n\nInadmissible current Node: (" + fringe.get(i).peek().x + ", " + fringe.get(i).peek().y + "), Fringe size: " + fringe.get(i).size() + ", Closed size: " + closed.get(i).size());
+					//System.out.println("Admissible current Node: (" + fringe.get(0).peek().x + ", " + fringe.get(0).peek().y + "), Fringe size: " + fringe.get(0).size() + ", Closed size: " + closed.get(0).size());
+					//System.out.println("Fringe "+i+ ": "+fringe.get(i).peek().eCost+" Fringe "+0+ ": "+fringe.get(0).peek().eCost);
 					if(fringe.get(i).peek().eCost <= weight2 * fringe.get(0).peek().eCost)
 					{
 						if(endNode.get(i).distance <= fringe.get(i).peek().eCost)
@@ -412,7 +415,7 @@ public class Grid extends Application{
 								//return the path back to start
 								ArrayList<Node> res = new ArrayList<Node>();
 								Node ptr = endNode.get(i);
-								for(; !start.equals(ptr); ptr = ptr.parent)//checking wrong start object
+								for(; !(ptr.x == start.x && ptr.y == start.y); ptr = ptr.parent)//checking wrong start object
 								{
 									System.out.println("Pathed Node: " + ptr.x + ", " + ptr.y);
 									res.add(ptr);
@@ -439,8 +442,9 @@ public class Grid extends Application{
 								//return the path back to start
 								ArrayList<Node> res = new ArrayList<Node>();
 								Node ptr = endNode.get(0);
-								for(; ptr != start; ptr = ptr.parent)
+								for(; ptr.x != start.x && ptr.y != start.y; ptr = ptr.parent)//checking wrong start object
 								{
+									System.out.println("Pathed Node: " + ptr.x + ", " + ptr.y);
 									res.add(ptr);
 								}
 								res.add(ptr);
@@ -677,6 +681,13 @@ public class Grid extends Application{
 		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b)->{return search.euclidDist(a, b);});
 		drawBoard(gContext, world.Grid, cellSize, row, col);
 		drawPath(gContext, path, cellSize);
+		for(int i = 0;i < 50; i++)
+		{
+			world.createGrid(120, 160);
+			path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b, Double c)->{return search.euclidDist(a, b);});
+			drawBoard(gContext, world.Grid, cellSize, row, col);
+			drawPath(gContext, path, cellSize);
+		}
 		
 		System.out.println("Memory Usage: " + (double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000 + " MB");
 	}
