@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 
+
+
 public class Grid extends Application{
 	ArrayList<ArrayList<Node>> Grid = new ArrayList<ArrayList<Node>>();
 	Node cell = new Node();
@@ -59,15 +61,15 @@ public class Grid extends Application{
 		{
 			int xdist = Math.abs(start.x-end.x);
 			int ydist = Math.abs(start.y-end.y);
-			return Math.pow(((xdist + ydist) + (1.41421356237) * Math.min(xdist, ydist))/4, 2);
+			return Math.pow(((xdist + ydist)/4 + (1.41421356237) * Math.min(xdist, ydist)), 2);
 		}
 		public static double randomDist(Node start, Node end)
 		{
 			return Math.random();
 		}
-		public static double aDist(Node start, Node end)
+		public static double squareEuclidDist(Node start, Node end)
 		{
-			return (start.x+end.x);
+			return Math.pow(euclidDist(start, end),2);
 		}
 		/**
 		 * gets a distance based on a start and end node, and returns the minimum possible distance
@@ -79,7 +81,7 @@ public class Grid extends Application{
 		{
 			int xdist = Math.abs(start.x-end.x);
 			int ydist = Math.abs(start.y-end.y);
-			return ((xdist + ydist)/4 - (1.41421356237) * Math.min(xdist, ydist)); /*(Math.sqrt(2) is aproximatley 1.41421356237*/
+			return ((xdist + ydist)/4 - (1.41421356237) * Math.min(xdist, ydist)); /*(Math.sqrt(2) is approximately 1.41421356237*/
 		}
 		private static boolean isnDiagonal(Node start, Node end)
 		{
@@ -296,6 +298,61 @@ public class Grid extends Application{
 			//return path
 			
 		}
+		/*public static statData astar(Node start, Node end, Heuristic<Node, Node, Double> heuristic, statData data)
+		{
+			if(start.equals(end))
+			{
+				data.nodesExpanded = 0;
+				data.path = null;
+				return data;
+			}
+			if(!isTraversable(start))
+			{
+				data.nodesExpanded = 0;
+				data.path = null;
+				return data;
+			}
+			Node ptr = start, fptr;//current and fringe pointer nodes
+			ptr.parent=ptr;
+			PriorityQueue<Node> fringe = new PriorityQueue<Node>(8);//up to 8 neighbors around starting node
+			ArrayList<Node> visited = new ArrayList<Node>();
+			data.path = new ArrayList<Node>();
+			data.nodesExpanded = new Integer(0);
+			fringe.add(ptr);
+			while(!fringe.isEmpty())
+			{
+				data.nodesExpanded++;
+				ptr = fringe.poll();
+				if(ptr.equals(end))
+				{
+					for(;ptr!=start; ptr = ptr.parent)//return the path back to start
+					{
+						data.path.add(ptr);
+					}
+					data.path.add(ptr);
+					return data;
+				}
+				visited.add(ptr);
+				for(int i = 0; i<ptr.neighbors.size();i++)//getting neighbors from current node
+				{
+					fptr = ptr.neighbors.get(i);//current neighbor of graph
+					if(isTraversable(fptr)&&!visited.contains(fptr))
+					{
+						if(!fringe.contains(fptr))//add to the fringe and set to infinity
+						{
+							fptr.distance = Double.POSITIVE_INFINITY;
+							fringe.add(fptr);
+						}
+						updateNode(fringe, ptr, fptr, end, (Node a, Node b, Double c) -> heuristic.apply(a, b, c));
+					}
+				}
+			}
+			data.nodesExpanded = 0;
+			data.path = null;
+			return data;
+			//return path
+			
+		}*/
 		public static void expandState(PriorityQueue<Node> fringe, HashSet<Node> closed, Node current, Node end, Heuristic<Node, Node, Double> heuristic, Double weight)
 		{
 			Node ptr = current, insert = null;
@@ -454,6 +511,102 @@ public class Grid extends Application{
 						else
 						{
 							Node ptr = fringe.get(0).peek();
+							//System.out.println("Heuristic " + 0 + " choosing (" + ptr.x + ", " + ptr.y + ')');
+							expandState(fringe.get(0), closed.get(0), ptr, endNode.get(0), heuristic[0], weight1);
+							closed.get(0).add(ptr);
+						}
+					}
+				}
+			}
+			return null;
+		}
+		public static statData sequentialAStar(ArrayList<ArrayList<Node>> graph, Node start, Node end, Heuristic<Node, Node, Double>[] heuristic, Double weight1, Double weight2, statData data)
+		{
+			ArrayList<PriorityQueue<Node>> fringe = new ArrayList<PriorityQueue<Node>>();
+			ArrayList<HashSet<Node>> closed = new ArrayList<HashSet<Node>>();
+			ArrayList<Node> endNode = new ArrayList<Node>(); 
+			//for all nodes in the graph
+			Node tmp = null;
+			for(int i = 0; i < heuristic.length; i++)
+			{
+				//initialize PriorityQueue for subsequent searches
+				fringe.add(new PriorityQueue<Node>());
+				closed.add(new HashSet<Node>());
+				//start node
+				tmp = new Node(start.type, start.x, start.y, 0.0, 0.0, null);
+				tmp.neighbors = new ArrayList<Node>(start.neighbors);
+				tmp.eCost = tmp.distance + heuristic[i].apply(tmp, end, weight1);
+				//add start node into corresponding PriorityQueue
+				fringe.get(i).add(tmp);
+				//end node
+				tmp = new Node(end.type, end.x, end.y, Double.POSITIVE_INFINITY, 0.0, null);
+				tmp.neighbors = new ArrayList<Node>(end.neighbors);
+				//add end node into corresponding PriorityQueue
+				endNode.add(tmp);
+				
+			}
+			data.nodesExpanded = 0;
+			data.path = new ArrayList<Node>();
+			//while the anchor search's fringe < infinity
+			while(fringe.get(0).peek().eCost < Double.POSITIVE_INFINITY)
+			{
+				//for all the non admissible searches
+				for(int i = 1; i < heuristic.length; i++)
+				{
+					//System.out.println("\n\nInadmissible: "+i+" current Node: (" + fringe.get(i).peek().x + ", " + fringe.get(i).peek().y + "), Fringe size: " + fringe.get(i).size() + ", Closed size: " + closed.get(i).size());
+					//System.out.println("Admissible current Node: (" + fringe.get(0).peek().x + ", " + fringe.get(0).peek().y + "), Fringe size: " + fringe.get(0).size() + ", Closed size: " + closed.get(0).size());
+					//System.out.println("Fringe "+i+ ": "+fringe.get(i).peek().eCost+" Fringe "+0+ ": "+fringe.get(0).peek().eCost);
+					if(fringe.get(i).peek().eCost <= weight2 * fringe.get(0).peek().eCost)
+					{
+						if(endNode.get(i).distance <= fringe.get(i).peek().eCost)
+						{
+							if(endNode.get(i).distance < Double.POSITIVE_INFINITY)
+							{
+								//return the path back to start
+								ArrayList<Node> res = new ArrayList<Node>();
+								Node ptr = endNode.get(i);
+								for(; !(ptr.x == start.x && ptr.y == start.y); ptr = ptr.parent)//checking wrong start object
+								{
+									res.add(ptr);
+								}
+								res.add(ptr);
+								
+								data.path = res;
+								return data;
+							}
+						}
+						else
+						{
+							//i want to pass nodes that have neighbors but am not entirely sure how to do so
+							Node ptr = fringe.get(i).peek();
+							data.nodesExpanded++;
+							//System.out.println("Heuristic " + i + " choosing (" + ptr.x + ", " + ptr.y + ')');
+							expandState(fringe.get(i), closed.get(i), ptr, endNode.get(i), heuristic[i], weight1);
+							closed.get(i).add(ptr);
+						}
+					}
+					else
+					{
+						if(endNode.get(0).distance <= fringe.get(0).peek().eCost)
+						{
+							if(endNode.get(0).distance < Double.POSITIVE_INFINITY)
+							{
+								//return the path back to start
+								ArrayList<Node> res = new ArrayList<Node>();
+								Node ptr = endNode.get(0);
+								for(; ptr.x != start.x && ptr.y != start.y; ptr = ptr.parent)//checking wrong start object
+								{
+									res.add(ptr);
+								}
+								res.add(ptr);
+								data.path = res;
+								return data;
+							}
+						}
+						else
+						{
+							Node ptr = fringe.get(0).peek();
+							data.nodesExpanded++;
 							//System.out.println("Heuristic " + 0 + " choosing (" + ptr.x + ", " + ptr.y + ')');
 							expandState(fringe.get(0), closed.get(0), ptr, endNode.get(0), heuristic[0], weight1);
 							closed.get(0).add(ptr);
@@ -681,15 +834,122 @@ public class Grid extends Application{
 		ArrayList<Node> path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b)->{return search.euclidDist(a, b);});
 		drawBoard(gContext, world.Grid, cellSize, row, col);
 		drawPath(gContext, path, cellSize);
-		for(int i = 0;i < 50; i++)
-		{
-			world.createGrid(120, 160);
-			path = search.astar(world.Grid.get(0).get(0),world.Grid.get(119).get(159), (Node a, Node b, Double c)->{return search.euclidDist(a, b);});
-			drawBoard(gContext, world.Grid, cellSize, row, col);
-			drawPath(gContext, path, cellSize);
-		}
 		
-		System.out.println("Memory Usage: " + (double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000 + " MB");
+		/*Random rand = new Random();
+		Integer avgNode = new Integer(0), avgPath = new Integer(0);
+		statData nodesExpanded = new statData();
+		nodesExpanded.path = new ArrayList<Node>();
+		nodesExpanded.nodesExpanded = new Integer(0);
+		long stime = 0, etime = 0, avgtime = 0;
+		for(int i = 0;i < 50;)
+		{
+			if(i % 10 == 0)
+			{
+				world.createGrid(120, 160);
+			}
+			stime = System.currentTimeMillis();
+			nodesExpanded = search.astar(world.Grid.get((int)Math.round(rand.nextDouble()*119)).get((int)Math.round(rand.nextDouble()*159)),world.Grid.get((int)Math.round(rand.nextDouble()*119)).get((int)Math.round(rand.nextDouble()*159)), (Node a, Node b, Double c)->{return search.randomDist(a, b) * 2;}, nodesExpanded);
+			etime = System.currentTimeMillis();
+			
+			avgtime +=(etime-stime);
+			if(nodesExpanded.nodesExpanded!=0)
+			{
+				avgNode+=nodesExpanded.nodesExpanded;
+			}
+			else
+			{
+				nodesExpanded.nodesExpanded = new Integer(0);
+			}
+			if(nodesExpanded.path !=null)
+			{
+				i++;
+				avgPath +=nodesExpanded.path.size();
+			}
+		}
+		System.out.print(avgNode/50 + " & ");
+		System.out.print(avgtime/50 + " ms & ");
+		System.out.print(avgPath/50 + " & ");
+		System.out.print((double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000 + " MB ");
+		*/
+		/*
+		Random rand = new Random();
+		Integer avgNode = new Integer(0), avgPath = new Integer(0);
+		statData nodesExpanded = new statData();
+		nodesExpanded.path = new ArrayList<Node>();
+		nodesExpanded.nodesExpanded = new Integer(0);
+		long stime = 0, etime = 0, avgtime = 0;
+		
+		ToDoubleBiFunction<Node, Node> functmp = (Node a, Node b)->{return search.euclidDist(a, b);};
+		ToDoubleBiFunction<Node, Node> functmp2 = (Node a, Node b)->{return search.manhattanDist(a, b);};
+		ToDoubleBiFunction<Node, Node> functmp3 = (Node a, Node b)->{return search.squareEuclidDist(a, b);};
+		ToDoubleBiFunction<Node, Node> functmp4 = (Node a, Node b)->{return search.squareManhattanDist(a, b);};
+		ToDoubleBiFunction<Node, Node> functmp5 = (Node a, Node b)->{return search.randomDist(a, b);};
+		Double weightTmp1 = 1.0, weightTmp2 = 2.0;
+		
+		@SuppressWarnings("unchecked")
+		Heuristic<Node, Node, Double>[] heuristics = (Heuristic<Node, Node, Double>[])new Heuristic[]{
+				(Object a, Object b, Object c)->{return functmp.applyAsDouble((Node)a, (Node)b) * weightTmp1;},
+				(Object a, Object b, Object c)->{return functmp2.applyAsDouble((Node)a, (Node)b) * weightTmp2;},
+				(Object a, Object b, Object c)->{return functmp3.applyAsDouble((Node)a, (Node)b) * weightTmp2;},
+				(Object a, Object b, Object c)->{return functmp4.applyAsDouble((Node)a, (Node)b) * weightTmp2;},
+				(Object a, Object b, Object c)->{return functmp5.applyAsDouble((Node)a, (Node)b) * weightTmp2;}};
+		int sx = 0, sy = 0, ex = 0, ey = 0;
+		
+		/*world.createGrid(120, 160);
+		nodesExpanded = search.sequentialAStar(world.Grid, world.Grid.get(0).get(0), world.Grid.get(50).get(50), heuristics, 1.0, 1.0, nodesExpanded);
+		drawBoard(gContext, world.Grid, cellSize, row, col);
+		drawPath(gContext, nodesExpanded.path, cellSize);*/
+		/*for(int i = 0;i < 50;)
+		{
+			if(i % 10 == 0)
+			{
+				world.createGrid(120, 160);
+			}
+			sy = (int)Math.round(rand.nextDouble()*119);
+			ey = (int)Math.round(rand.nextDouble()*119);
+			sx = (int)Math.round(rand.nextDouble()*159);
+			ex = (int)Math.round(rand.nextDouble()*159);
+			if(!search.isTraversable(world.Grid.get(sy).get(sx))||!search.isTraversable(world.Grid.get(ey).get(ex)))
+			{
+				continue;
+			}
+			
+			try
+			{
+				stime = System.currentTimeMillis();
+				nodesExpanded = search.sequentialAStar(world.Grid, world.Grid.get(sy).get(sx), world.Grid.get(ey).get(ex), heuristics, 1.0, 1.0, nodesExpanded);
+				etime = System.currentTimeMillis();
+			}
+			catch(Exception e)
+			{
+				continue;
+			}
+			
+			
+			avgtime +=(etime-stime);
+			if(nodesExpanded.nodesExpanded!=0)
+			{
+				avgNode+=nodesExpanded.nodesExpanded;
+			}
+			else
+			{
+				nodesExpanded.nodesExpanded = new Integer(0);
+			}
+			if(nodesExpanded.path !=null)
+			{
+				i++;
+				avgPath +=nodesExpanded.path.size();
+			}
+			
+		}
+		//runs A* and draws the path returned using the previously picked heuristic
+		System.out.print(avgNode/50 + " & ");
+		System.out.print(avgtime/50 + " ms & ");
+		System.out.print(avgPath/50 + " & ");
+		System.out.print((double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000 + " MB ");
+		drawPath(gContext, nodesExpanded.path, cellSize);
+		*/
+		
 	}
 
 	
