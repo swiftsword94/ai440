@@ -1,4 +1,4 @@
-# ai440
+# A* Pathfinding Demo
 
 Dependencies: Java >= 7u6
 (A version of Java with JavaFX bundled together)
@@ -9,8 +9,11 @@ This is an implementation of an A* pathfinding algorithm on a graph with a defau
 A world is created where each cell has its own traversal costs.
 
 Black = Blocked
+
 Light Green = Normal Traversal
+
 Dark Green = Hard Traversal
+
 Dark Red = Highway = 0.25 multiplier on the current cell's traversal cost(only in cardinal directions)
 
 You are able to pick any two points on the grid and find a path between the two points.
